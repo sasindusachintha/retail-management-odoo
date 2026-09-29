@@ -176,11 +176,11 @@ class ShopSaleOrder(models.Model):
                     previous_quantity - line.quantity
                 )
 
-                # Reduce product stock
-                product.quantity = new_quantity
+                # Reduce product stock (sudo so Cashier role can complete sales)
+                product.sudo().write({'quantity': new_quantity})
 
-                # Create stock movement
-                self.env['shop.stock.movement'].create({
+                # Create stock movement (sudo)
+                self.env['shop.stock.movement'].sudo().create({
                     'product_id': product.id,
                     'movement_type': 'out',
                     'quantity': line.quantity,
@@ -200,7 +200,7 @@ class ShopSaleOrder(models.Model):
             # CREATE PAYMENT
             # ---------------------------------
 
-            self.env['shop.payment'].create({
+            self.env['shop.payment'].sudo().create({
                 'name': f'PAY-{order.name}',
                 'order_id': order.id,
                 'amount': order.amount_total,

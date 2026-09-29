@@ -55,7 +55,8 @@
         name="Sales by Payment Method"
         parent="menu_shop_reports"
         action="action_shop_report_payment_method"
-        sequence="40"/>
+        sequence="40"
+        groups="shop_management.group_shop_manager"/>
 
 
     <!-- ============================================================ -->
@@ -127,7 +128,8 @@
         name="Purchase Report"
         parent="menu_shop_reports"
         action="action_shop_report_purchase"
-        sequence="50"/>
+        sequence="50"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"/>
 
 
     <!-- ============================================================ -->
@@ -198,7 +200,8 @@
         name="Profit Report"
         parent="menu_shop_reports"
         action="action_shop_report_profit"
-        sequence="60"/>
+        sequence="60"
+        groups="shop_management.group_shop_manager"/>
 
 
     <!-- ============================================================ -->
@@ -272,6 +275,7 @@
         name="Stock Report"
         parent="menu_shop_reports"
         action="action_shop_report_stock"
-        sequence="70"/>
+        sequence="70"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"/>
 
 </odoo>

@@ -66,8 +66,8 @@
         id="menu_shop_purchases"
         name="Purchases"
         parent="menu_shop_management"
-        sequence="40"
-        
+        sequence="50"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
     />
 
 

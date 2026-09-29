@@ -13,7 +13,7 @@
     parent="menu_shop_management"
     action="action_shop_dashboard"
     sequence="1"
-    groups="shop_management.group_shop_manager"
+    groups="shop_management.group_shop_manager,shop_management.group_shop_cashier"
     />
 
 

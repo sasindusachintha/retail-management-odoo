@@ -109,7 +109,7 @@
         name="Payments"
         parent="menu_shop_management"
         action="action_shop_payment"
-        sequence="40"
+        sequence="35"
          groups="shop_management.group_shop_manager,shop_management.group_shop_cashier"
     />
 
