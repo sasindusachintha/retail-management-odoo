@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+
+    <!-- Product List View -->
+    <record id="view_shop_product_list" model="ir.ui.view">
+        <field name="name">shop.product.list</field>
+        <field name="model">shop.product</field>
+        <field name="arch" type="xml">
+            <list string="Products">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="price"/>
+                <field name="quantity"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- Product Form View -->
+    <record id="view_shop_product_form" model="ir.ui.view">
+        <field name="name">shop.product.form</field>
+        <field name="model">shop.product</field>
+        <field name="arch" type="xml">
+            <form string="Product">
+                <sheet>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="category"/>
+                            <field name="price"/>
+                        </group>
+
+                        <group>
+                            <field name="quantity"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="description"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Window Action -->
+    <record id="action_shop_product" model="ir.actions.act_window">
+        <field name="name">Products</field>
+        <field name="res_model">shop.product</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+
+
+
+
+    <!-- Product Menu -->
+    <menuitem
+        id="menu_shop_products"
+        name="Products"
+        parent="menu_shop_management"
+        action="action_shop_product"
+        sequence="10"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory,shop_management.group_shop_cashier"
+    />
+
+</odoo>
+

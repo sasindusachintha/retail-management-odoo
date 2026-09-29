@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+
+    <!-- Reports -->
+    <record id="view_shop_sale_order_pivot" model="ir.ui.view">
+        <field name="name">shop.sale.order.pivot</field>
+        <field name="model">shop.sale.order</field>
+        <field name="arch" type="xml">
+            <pivot string="Sales Report">
+                <field name="order_date" interval="month" type="row"/>
+                <field name="payment_method" type="col"/>
+                <field name="amount_total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_shop_sale_order_graph" model="ir.ui.view">
+        <field name="name">shop.sale.order.graph</field>
+        <field name="model">shop.sale.order</field>
+        <field name="arch" type="xml">
+            <graph string="Sales Report" type="bar">
+                <field name="order_date" interval="day"/>
+                <field name="amount_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_shop_sales_report" model="ir.actions.act_window">
+        <field name="name">Sales Report</field>
+        <field name="res_model">shop.sale.order</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+    </record>
+
+    <menuitem
+        id="menu_shop_reports"
+        name="Reports"
+        parent="menu_shop_management"
+        sequence="50"
+        groups="shop_management.group_shop_manager"
+    />
+
+    <menuitem
+        id="menu_shop_report_sales"
+        name="Sales Report"
+        parent="menu_shop_reports"
+        action="action_shop_sales_report"
+        sequence="1"
+    />
+
+
+</odoo>

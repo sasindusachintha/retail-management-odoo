@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="shop_management.ShopDashboard">
+
+        <div class="shop-dashboard">
+
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>Welcome to Shop Management</p>
+                </div>
+
+                <button
+                    class="btn btn-primary"
+                    t-on-click="loadDashboard"
+                >
+                    <i class="fa fa-refresh me-2"/>
+                    Refresh
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div t-if="state.loading" class="dashboard-loading">
+                <i class="fa fa-spinner fa-spin fa-2x"/>
+                <span>Loading dashboard...</span>
+            </div>
+
+            <div t-else="">
+
+                <!-- Statistics -->
+                <div class="dashboard-cards">
+
+                    <div class="dashboard-card sales-card">
+                        <div class="card-icon">
+                            <i class="fa fa-money"/>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="card-label">Today's Sales</div>
+                            <div class="card-value">
+                                Rs. <t t-esc="formatCurrency(state.data.today_sales)"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card orders-card">
+                        <div class="card-icon">
+                            <i class="fa fa-shopping-cart"/>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="card-label">Today's Orders</div>
+                            <div class="card-value">
+                                <t t-esc="state.data.today_orders"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card customers-card">
+                        <div class="card-icon">
+                            <i class="fa fa-users"/>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="card-label">Customers</div>
+                            <div class="card-value">
+                                <t t-esc="state.data.total_customers"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card products-card">
+                        <div class="card-icon">
+                            <i class="fa fa-cubes"/>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="card-label">Products</div>
+                            <div class="card-value">
+                                <t t-esc="state.data.total_products"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card warning-card">
+                        <div class="card-icon">
+                            <i class="fa fa-exclamation-triangle"/>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="card-label">Low Stock</div>
+                            <div class="card-value">
+                                <t t-esc="state.data.low_stock_count"/>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Main content -->
+                <div class="dashboard-grid">
+
+                    <!-- Recent Sales -->
+                    <div class="dashboard-panel">
+
+                        <div class="panel-header">
+                            <div>
+                                <h3>Recent Sales</h3>
+                                <span>Latest completed sales</span>
+                            </div>
+                        </div>
+
+                        <div t-if="state.data.recent_sales.length === 0"
+                             class="empty-state">
+                            <i class="fa fa-shopping-cart"/>
+                            <p>No completed sales yet.</p>
+                        </div>
+
+                        <div t-else="" class="table-responsive">
+
+                            <table class="dashboard-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>Sale</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <tr
+                                        t-foreach="state.data.recent_sales"
+                                        t-as="sale"
+                                        t-key="sale.id"
+                                    >
+                                        <td>
+                                            <strong t-esc="sale.name"/>
+                                        </td>
+
+                                        <td t-esc="sale.customer"/>
+
+                                        <td t-esc="formatDate(sale.date)"/>
+
+                                        <td class="text-end">
+                                            <strong>
+                                                Rs.
+                                                <t t-esc="formatCurrency(sale.amount)"/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Low Stock -->
+                    <div class="dashboard-panel">
+
+                        <div class="panel-header">
+
+                            <div>
+                                <h3>Low Stock</h3>
+                                <span>Products that need attention</span>
+                            </div>
+
+                            <span class="stock-count">
+                                <t t-esc="state.data.low_stock_count"/>
+                            </span>
+
+                        </div>
+
+                        <div t-if="state.data.low_stock_products.length === 0"
+                             class="empty-state">
+
+                            <i class="fa fa-check-circle"/>
+
+                            <p>
+                                All products have sufficient stock.
+                            </p>
+
+                        </div>
+
+                        <div t-else="" class="stock-list">
+
+                            <div
+                                t-foreach="state.data.low_stock_products"
+                                t-as="product"
+                                t-key="product.id"
+                                class="stock-item"
+                            >
+
+                                <div class="stock-product">
+                                    <div class="product-icon">
+                                        <i class="fa fa-cube"/>
+                                    </div>
+
+                                    <div>
+                                        <strong t-esc="product.name"/>
+                                        <small>Current stock</small>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="stock-number"
+                                    t-att-class="getStockClass(product.quantity)"
+                                >
+                                    <t t-esc="product.quantity"/>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </t>
+
+</templates>

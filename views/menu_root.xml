@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Root application menu (this is what makes it an app on the home screen) -->
+    <menuitem
+        id="menu_shop_management"
+        name="Shop Management"
+        sequence="1"
+        web_icon="shop_management,static/description/icon.png"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_cashier,shop_management.group_shop_inventory"
+    />
+
+</odoo>

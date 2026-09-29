@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Sales by Payment Method                                      -->
+    <!-- ============================================================ -->
+    <record id="view_shop_report_payment_method_form" model="ir.ui.view">
+        <field name="name">shop.report.payment.method.form</field>
+        <field name="model">shop.report.payment.method</field>
+        <field name="arch" type="xml">
+            <form string="Sales by Payment Method">
+                <header>
+                    <button name="action_generate" type="object"
+                            string="Generate Report" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Sales by Payment Method</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="payment_method"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" readonly="1">
+                        <list create="0" delete="0" edit="0">
+                            <field name="method_name"/>
+                            <field name="transactions" sum="Total"/>
+                            <field name="sales_amount" sum="Total"/>
+                            <field name="share"/>
+                        </list>
+                    </field>
+                    <group class="oe_subtotal_footer">
+                        <field name="total_transactions"/>
+                        <field name="total_sales"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_shop_report_payment_method" model="ir.actions.act_window">
+        <field name="name">Sales by Payment Method</field>
+        <field name="res_model">shop.report.payment.method</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_shop_report_payment_method"
+        name="Sales by Payment Method"
+        parent="menu_shop_reports"
+        action="action_shop_report_payment_method"
+        sequence="40"/>
+
+
+    <!-- ============================================================ -->
+    <!-- Purchase Report                                              -->
+    <!-- ============================================================ -->
+    <record id="view_shop_report_purchase_form" model="ir.ui.view">
+        <field name="name">shop.report.purchase.form</field>
+        <field name="model">shop.report.purchase</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Report">
+                <header>
+                    <button name="action_generate" type="object"
+                            string="Generate Report" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Purchase Report</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="supplier_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Purchases">
+                            <field name="line_ids" readonly="1">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="purchase_id"/>
+                                    <field name="supplier_id"/>
+                                    <field name="purchase_date"/>
+                                    <field name="items" sum="Total"/>
+                                    <field name="total" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Items Purchased">
+                            <field name="product_line_ids" readonly="1">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="product_id"/>
+                                    <field name="quantity" sum="Total"/>
+                                    <field name="avg_cost"/>
+                                    <field name="total_cost" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <group class="oe_subtotal_footer">
+                        <field name="purchase_count"/>
+                        <field name="total_amount"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_shop_report_purchase" model="ir.actions.act_window">
+        <field name="name">Purchase Report</field>
+        <field name="res_model">shop.report.purchase</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_shop_report_purchase"
+        name="Purchase Report"
+        parent="menu_shop_reports"
+        action="action_shop_report_purchase"
+        sequence="50"/>
+
+
+    <!-- ============================================================ -->
+    <!-- Profit Report                                                -->
+    <!-- ============================================================ -->
+    <record id="view_shop_report_profit_form" model="ir.ui.view">
+        <field name="name">shop.report.profit.form</field>
+        <field name="model">shop.report.profit</field>
+        <field name="arch" type="xml">
+            <form string="Profit Report">
+                <header>
+                    <button name="action_generate" type="object"
+                            string="Generate Report" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Profit Report</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="product_id"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" readonly="1">
+                        <list create="0" delete="0" edit="0"
+                              decoration-danger="profit &lt; 0"
+                              decoration-warning="cost_missing">
+                            <field name="product_id"/>
+                            <field name="quantity" sum="Total"/>
+                            <field name="revenue" sum="Total"/>
+                            <field name="unit_cost"/>
+                            <field name="cost" sum="Total"/>
+                            <field name="profit" sum="Total"/>
+                            <field name="margin"/>
+                            <field name="cost_missing" optional="show"/>
+                        </list>
+                    </field>
+                    <group class="oe_subtotal_footer">
+                        <field name="total_sales"/>
+                        <field name="total_cost"/>
+                        <field name="total_profit"/>
+                        <field name="overall_margin"/>
+                        <field name="missing_cost_count"/>
+                    </group>
+                    <div class="text-muted">
+                        Cost = quantity sold x weighted-average cost of received
+                        purchases. Products never purchased show a cost of 0 and
+                        are highlighted.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_shop_report_profit" model="ir.actions.act_window">
+        <field name="name">Profit Report</field>
+        <field name="res_model">shop.report.profit</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_shop_report_profit"
+        name="Profit Report"
+        parent="menu_shop_reports"
+        action="action_shop_report_profit"
+        sequence="60"/>
+
+
+    <!-- ============================================================ -->
+    <!-- Stock Report                                                 -->
+    <!-- ============================================================ -->
+    <record id="view_shop_report_stock_form" model="ir.ui.view">
+        <field name="name">shop.report.stock.form</field>
+        <field name="model">shop.report.stock</field>
+        <field name="arch" type="xml">
+            <form string="Stock Report">
+                <header>
+                    <button name="action_generate" type="object"
+                            string="Generate Report" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Stock Report</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="category"/>
+                        </group>
+                        <group>
+                            <field name="stock_status"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" readonly="1">
+                        <list create="0" delete="0" edit="0"
+                              decoration-danger="status == 'out'"
+                              decoration-warning="status == 'low'">
+                            <field name="product_id"/>
+                            <field name="category"/>
+                            <field name="quantity" sum="Total"/>
+                            <field name="min_stock" optional="hide"/>
+                            <field name="unit_cost"/>
+                            <field name="stock_value" sum="Total"/>
+                            <field name="status" widget="badge"
+                                   decoration-danger="status == 'out'"
+                                   decoration-warning="status == 'low'"
+                                   decoration-success="status == 'ok'"/>
+                            <field name="cost_missing" optional="hide"/>
+                        </list>
+                    </field>
+                    <group class="oe_subtotal_footer">
+                        <field name="total_products"/>
+                        <field name="total_quantity"/>
+                        <field name="total_value"/>
+                        <field name="low_count"/>
+                        <field name="out_count"/>
+                        <field name="missing_cost_count"/>
+                    </group>
+                    <div class="text-muted">
+                        Unit cost = weighted-average cost of received purchases.
+                        Products never purchased show a cost of 0.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_shop_report_stock" model="ir.actions.act_window">
+        <field name="name">Stock Report</field>
+        <field name="res_model">shop.report.stock</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_shop_report_stock_valuation"
+        name="Stock Report"
+        parent="menu_shop_reports"
+        action="action_shop_report_stock"
+        sequence="70"/>
+
+</odoo>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Dashboard -->
+    <record id="action_shop_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">shop_management.dashboard</field>
+    </record>
+
+    <menuitem
+        id="menu_shop_dashboard"
+    name="Dashboard"
+    parent="menu_shop_management"
+    action="action_shop_dashboard"
+    sequence="1"
+    groups="shop_management.group_shop_manager"
+    />
+
+
+    <!-- POS -->
+    <record id="action_retail_pos" model="ir.actions.client">
+        <field name="name">Retail POS</field>
+        <field name="tag">shop_management.retail_pos</field>
+    </record>
+
+    <menuitem
+        id="menu_retail_pos"
+    name="Point of Sale"
+    parent="menu_shop_management"
+    action="action_retail_pos"
+    sequence="2"
+    groups="shop_management.group_shop_manager,shop_management.group_shop_cashier"
+    />
+
+</odoo>

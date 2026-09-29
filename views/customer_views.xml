@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+
+    <!-- Customer List View -->
+    <record id="view_shop_customer_list" model="ir.ui.view">
+        <field name="name">shop.customer.list</field>
+        <field name="model">shop.customer</field>
+        <field name="arch" type="xml">
+            <list string="Customers">
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- Customer Form View -->
+    <record id="view_shop_customer_form" model="ir.ui.view">
+        <field name="name">shop.customer.form</field>
+        <field name="model">shop.customer</field>
+        <field name="arch" type="xml">
+            <form string="Customer">
+                <sheet>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="phone"/>
+                            <field name="email"/>
+                        </group>
+
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="address"/>
+                        <field name="notes"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Customer Action -->
+    <record id="action_shop_customer" model="ir.actions.act_window">
+        <field name="name">Customers</field>
+        <field name="res_model">shop.customer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Customer Menu -->
+    <menuitem
+        id="menu_shop_customers"
+        name="Customers"
+        parent="menu_shop_management"
+        action="action_shop_customer"
+        sequence="20"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_cashier"
+    />
+
+</odoo>

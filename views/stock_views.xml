@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Stock Movements -->
+
+    <record id="view_shop_stock_movement_list" model="ir.ui.view">
+        <field name="name">shop.stock.movement.list</field>
+        <field name="model">shop.stock.movement</field>
+        <field name="arch" type="xml">
+            <list string="Stock Movements">
+                <field name="name"/>
+                <field name="movement_date"/>
+                <field name="product_id"/>
+                <field name="movement_type"/>
+                <field name="quantity"/>
+                <field name="previous_quantity"/>
+                <field name="new_quantity"/>
+                <field name="reason"/>
+                <field name="reference"/>
+                <field name="user_id"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record id="view_shop_stock_movement_form" model="ir.ui.view">
+        <field name="name">shop.stock.movement.form</field>
+        <field name="model">shop.stock.movement</field>
+        <field name="arch" type="xml">
+            <form string="Stock Movement">
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="movement_type"/>
+                            <field name="quantity"/>
+                        </group>
+
+                        <group>
+                            <field name="previous_quantity"/>
+                            <field name="new_quantity"/>
+                            <field name="movement_date"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="reason"/>
+                        <field name="reference"/>
+                        <field name="user_id"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_shop_stock_movements" model="ir.actions.act_window">
+        <field name="name">Stock Movements</field>
+        <field name="res_model">shop.stock.movement</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Stock Adjustment -->
+
+    <record id="view_shop_stock_adjustment_form" model="ir.ui.view">
+        <field name="name">shop.stock.adjustment.form</field>
+        <field name="model">shop.stock.adjustment</field>
+        <field name="arch" type="xml">
+            <form string="Stock Adjustment">
+
+                <group>
+                    <field name="product_id"/>
+                    <field name="current_quantity" readonly="1"/>
+                </group>
+
+                <group>
+                    <field name="adjustment_type"/>
+                    <field name="quantity"/>
+                    <field name="reason"/>
+                </group>
+
+                <footer>
+                    <button
+                        name="action_apply"
+                        string="Apply Adjustment"
+                        type="object"
+                        class="btn-primary"
+                    />
+
+                    <button
+                        string="Cancel"
+                        special="cancel"
+                        class="btn-secondary"
+                    />
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_shop_stock_adjustment" model="ir.actions.act_window">
+        <field name="name">Stock Adjustment</field>
+        <field name="res_model">shop.stock.adjustment</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+
+    <!-- Products Stock List -->
+
+    <record id="view_shop_product_stock_list" model="ir.ui.view">
+        <field name="name">shop.product.stock.list</field>
+        <field name="model">shop.product</field>
+        <field name="arch" type="xml">
+            <list string="Stock">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="quantity"/>
+                <field name="min_stock"/>
+                <field name="stock_status"/>
+                <field name="price"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record id="action_shop_product_stock" model="ir.actions.act_window">
+        <field name="name">Stock</field>
+        <field name="res_model">shop.product</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_shop_product_stock_list"/>
+    </record>
+
+
+    <!-- Menus -->
+
+    <menuitem
+        id="menu_shop_stock"
+        name="Stock"
+        parent="menu_shop_management"
+        sequence="30"
+    />
+
+    <menuitem
+        id="menu_shop_stock_products"
+        name="Stock Overview"
+        parent="menu_shop_stock"
+        action="action_shop_product_stock"
+        sequence="1"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+    <menuitem
+        id="menu_shop_stock_adjustment"
+        name="Stock Adjustment"
+        parent="menu_shop_stock"
+        action="action_shop_stock_adjustment"
+        sequence="2"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+    <menuitem
+        id="menu_shop_stock_movements"
+        name="Stock Movements"
+        parent="menu_shop_stock"
+        action="action_shop_stock_movements"
+        sequence="3"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+</odoo>

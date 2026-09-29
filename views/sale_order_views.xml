@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Sales Order List -->
+    <record id="view_shop_sale_order_list" model="ir.ui.view">
+        <field name="name">shop.sale.order.list</field>
+        <field name="model">shop.sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Sales History">
+                <field name="name"/>
+                <field name="customer_id"/>
+                <field name="order_date"/>
+                <field name="subtotal"/>
+                <field name="discount"/>
+                <field name="amount_total"/>
+                <field name="payment_method"/>
+                <field name="amount_paid"/>
+                <field name="change_amount"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Sales Search -->
+    <record id="view_shop_sale_order_search" model="ir.ui.view">
+        <field name="name">shop.sale.order.search</field>
+        <field name="model">shop.sale.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="customer_id"/>
+                <field name="order_date"/>
+
+                <filter
+                    name="confirmed"
+                    string="Completed"
+                    domain="[('state', '=', 'confirmed')]"
+                />
+
+                <filter
+                    name="today"
+                    string="Today"
+                    domain="[('order_date', '&gt;=', context_today())]"
+                />
+
+                <separator/>
+
+                <group>
+                    <filter
+                        name="group_customer"
+                        string="Customer"
+                        context="{'group_by': 'customer_id'}"
+                    />
+
+                    <filter
+                        name="group_payment"
+                        string="Payment Method"
+                        context="{'group_by': 'payment_method'}"
+                    />
+                </group>
+
+            </search>
+        </field>
+    </record>
+
+    <!-- Sales Order Form -->
+    <record id="view_shop_sale_order_form" model="ir.ui.view">
+        <field name="name">shop.sale.order.form</field>
+        <field name="model">shop.sale.order</field>
+        <field name="arch" type="xml">
+
+            <form string="Sales Order">
+
+                <header>
+
+                    <button
+                        name="action_confirm"
+                        string="Confirm"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        string="Cancel"
+                        type="object"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_reset_draft"
+                        string="Reset to Draft"
+                        type="object"
+                        invisible="state == 'draft'"
+                    />
+
+                    <button
+                        name="%(action_sale_receipt)d"
+                        string="Print Receipt"
+                        type="action"
+                        class="btn-secondary"
+                        invisible="state != 'confirmed'"
+                    />
+
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,confirmed,cancelled"
+                    />
+
+                </header>
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+
+                        <group>
+                            <field name="customer_id"/>
+                            <field name="order_date"/>
+                        </group>
+
+                        <group>
+                            <field name="payment_method"/>
+                            <field name="amount_paid"/>
+                        </group>
+
+                    </group>
+
+                    <notebook>
+
+                        <page string="Products">
+
+                            <field name="line_ids">
+
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_price"/>
+                                    <field name="subtotal" readonly="1"/>
+                                </list>
+
+                            </field>
+
+                        </page>
+
+                    </notebook>
+
+                    <group class="oe_subtotal_footer oe_right">
+
+                        <field name="subtotal" readonly="1"/>
+                        <field name="discount"/>
+                        <field name="amount_total" readonly="1"/>
+                        <field name="change_amount" readonly="1"/>
+
+                    </group>
+
+                </sheet>
+
+            </form>
+
+        </field>
+    </record>
+
+    <!-- Sales History Action -->
+    <record id="action_shop_sale_order" model="ir.actions.act_window">
+        <field name="name">Sales History</field>
+        <field name="res_model">shop.sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_shop_sale_order_search"/>
+    </record>
+
+    <!-- Sales History Menu -->
+    <menuitem
+        id="menu_shop_sale_orders"
+        name="Sales History"
+        parent="menu_shop_management"
+        action="action_shop_sale_order"
+        sequence="30"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_cashier"
+    />
+
+</odoo>

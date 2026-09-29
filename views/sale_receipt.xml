@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_sale_receipt" model="ir.actions.report">
+        <field name="name">Sales Receipt</field>
+        <field name="model">shop.sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">shop_management.sale_receipt_template</field>
+        <field name="report_file">shop_management.sale_receipt_template</field>
+        <field name="binding_model_id" ref="model_shop_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="sale_receipt_template">
+
+        <t t-call="web.html_container">
+
+            <t t-foreach="docs" t-as="order">
+
+                <t t-call="web.external_layout">
+
+                    <div class="page">
+
+                        <div style="text-align:center;">
+                            <h2>SHOP MANAGEMENT</h2>
+                            <h3>SALES RECEIPT</h3>
+                        </div>
+
+                        <hr/>
+
+                        <table style="width:100%;">
+                            <tr>
+                                <td><strong>Sale:</strong></td>
+                                <td>
+                                    <span t-field="order.name"/>
+                                </td>
+
+                                <td><strong>Date:</strong></td>
+                                <td>
+                                    <span t-field="order.order_date"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Customer:</strong></td>
+                                <td colspan="3">
+
+                                    <span
+                                        t-if="order.customer_id"
+                                        t-field="order.customer_id.name"
+                                    />
+
+                                    <span t-if="not order.customer_id">
+                                        Walk-in Customer
+                                    </span>
+
+                                </td>
+                            </tr>
+
+                            <tr t-if="order.customer_id and order.customer_id.phone">
+
+                                <td><strong>Phone:</strong></td>
+
+                                <td colspan="3">
+                                    <span t-field="order.customer_id.phone"/>
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                        <br/>
+
+                        <table
+                            style="width:100%; border-collapse:collapse;"
+                            border="1"
+                        >
+
+                            <thead>
+
+                                <tr>
+                                    <th style="padding:6px;">Product</th>
+                                    <th style="padding:6px;">Qty</th>
+                                    <th style="padding:6px;">Unit Price</th>
+                                    <th style="padding:6px;">Amount</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                <tr
+                                    t-foreach="order.line_ids"
+                                    t-as="line"
+                                >
+
+                                    <td style="padding:6px;">
+                                        <span t-field="line.product_id.name"/>
+                                    </td>
+
+                                    <td style="padding:6px; text-align:center;">
+                                        <span t-field="line.quantity"/>
+                                    </td>
+
+                                    <td style="padding:6px; text-align:right;">
+                                        Rs.
+                                        <span t-field="line.unit_price"/>
+                                    </td>
+
+                                    <td style="padding:6px; text-align:right;">
+                                        Rs.
+                                        <span t-field="line.subtotal"/>
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                        <br/>
+
+                        <table style="width:45%; margin-left:auto;">
+
+                            <tr>
+                                <td>Subtotal</td>
+                                <td style="text-align:right;">
+                                    Rs.
+                                    <span t-field="order.subtotal"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Discount</td>
+                                <td style="text-align:right;">
+                                    - Rs.
+                                    <span t-field="order.discount"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <strong>TOTAL</strong>
+                                </td>
+
+                                <td style="text-align:right;">
+                                    <strong>
+                                        Rs.
+                                        <span t-field="order.amount_total"/>
+                                    </strong>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <br/>
+
+                        <table style="width:45%; margin-left:auto;">
+
+                            <tr>
+                                <td>Payment</td>
+
+                                <td style="text-align:right;">
+                                    <span t-field="order.payment_method"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Amount Received</td>
+
+                                <td style="text-align:right;">
+                                    Rs.
+                                    <span t-field="order.amount_paid"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Change</td>
+
+                                <td style="text-align:right;">
+                                    Rs.
+                                    <span t-field="order.change_amount"/>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <br/>
+
+                        <hr/>
+
+                        <div style="text-align:center;">
+                            <h4>Thank You!</h4>
+                            <p>Please visit us again.</p>
+                        </div>
+
+                    </div>
+
+                </t>
+
+            </t>
+
+        </t>
+
+    </template>
+
+</odoo>

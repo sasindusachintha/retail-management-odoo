@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_shop_supplier_list" model="ir.ui.view">
+        <field name="name">shop.supplier.list</field>
+        <field name="model">shop.supplier</field>
+        <field name="arch" type="xml">
+            <list string="Suppliers">
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="address"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record id="view_shop_supplier_form" model="ir.ui.view">
+        <field name="name">shop.supplier.form</field>
+        <field name="model">shop.supplier</field>
+        <field name="arch" type="xml">
+            <form string="Supplier">
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+
+                        <group>
+                            <field name="phone"/>
+                            <field name="email"/>
+                            <field name="active"/>
+                        </group>
+
+                        <group>
+                            <field name="address"/>
+                        </group>
+
+                    </group>
+
+                    <group string="Notes">
+                        <field name="notes"/>
+                    </group>
+
+                </sheet>
+
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_shop_suppliers" model="ir.actions.act_window">
+        <field name="name">Suppliers</field>
+        <field name="res_model">shop.supplier</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <menuitem
+        id="menu_shop_purchases"
+        name="Purchases"
+        parent="menu_shop_management"
+        sequence="40"
+        
+    />
+
+
+    <menuitem
+        id="menu_shop_suppliers"
+        name="Suppliers"
+        parent="menu_shop_purchases"
+        action="action_shop_suppliers"
+        sequence="1"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+</odoo>

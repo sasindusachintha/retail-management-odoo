@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Purchase Order List -->
+
+    <record id="view_shop_purchase_order_list" model="ir.ui.view">
+        <field name="name">shop.purchase.order.list</field>
+        <field name="model">shop.purchase.order</field>
+        <field name="arch" type="xml">
+            <list string="Purchase Orders">
+
+                <field name="name"/>
+                <field name="purchase_date"/>
+                <field name="supplier_id"/>
+                <field name="subtotal"/>
+                <field name="total"/>
+                <field name="state"/>
+
+            </list>
+        </field>
+    </record>
+
+
+    <!-- Purchase Order Form -->
+
+    <record id="view_shop_purchase_order_form" model="ir.ui.view">
+        <field name="name">shop.purchase.order.form</field>
+        <field name="model">shop.purchase.order</field>
+        <field name="arch" type="xml">
+
+            <form string="Purchase Order">
+
+                <header>
+
+                    <button
+                        name="action_receive"
+                        string="Receive Purchase"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        string="Cancel"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_reset_draft"
+                        string="Reset to Draft"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="state != 'cancelled'"
+                    />
+
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,received,cancelled"
+                    />
+
+                </header>
+
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+
+                    <group>
+
+                        <group>
+                            <field name="supplier_id"/>
+                            <field name="purchase_date"/>
+                        </group>
+
+                        <group>
+                            <field name="subtotal"/>
+                            <field name="total"/>
+                        </group>
+
+                    </group>
+
+
+                    <notebook>
+
+                        <page string="Products">
+
+                            <field name="line_ids">
+
+                                <list editable="bottom">
+
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="cost_price"/>
+                                    <field name="subtotal" readonly="1"/>
+
+                                </list>
+
+                            </field>
+
+                        </page>
+
+
+                        <page string="Notes">
+
+                            <field name="notes"/>
+
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+
+            </form>
+
+        </field>
+    </record>
+
+
+    <!-- Purchase Orders Action -->
+
+    <record id="action_shop_purchase_orders" model="ir.actions.act_window">
+
+        <field name="name">Purchase Orders</field>
+
+        <field name="res_model">shop.purchase.order</field>
+
+        <field name="view_mode">list,form</field>
+
+    </record>
+
+
+    <!-- Purchase History -->
+
+    <record id="action_shop_purchase_history" model="ir.actions.act_window">
+
+        <field name="name">Purchase History</field>
+
+        <field name="res_model">shop.purchase.order</field>
+
+        <field name="view_mode">list,form</field>
+
+        <field name="domain">[('state', '=', 'received')]</field>
+
+    </record>
+
+
+    <!-- Menus -->
+
+    <menuitem
+        id="menu_shop_purchase_orders"
+        name="Purchase Orders"
+        parent="menu_shop_purchases"
+        action="action_shop_purchase_orders"
+        sequence="2"
+         groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+
+    <menuitem
+        id="menu_shop_purchase_history"
+        name="Purchase History"
+        parent="menu_shop_purchases"
+        action="action_shop_purchase_history"
+        sequence="3"
+           groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+</odoo>

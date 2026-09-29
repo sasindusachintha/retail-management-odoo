@@ -1,0 +1,277 @@
+.shop-dashboard {
+    padding: 28px;
+    background: #f5f6f8;
+    min-height: calc(100vh - 46px);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.dashboard-header p {
+    margin: 5px 0 0;
+    color: #6c757d;
+}
+
+.dashboard-loading {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    color: #6c757d;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.card-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.sales-card .card-icon {
+    background: #e8f7ee;
+    color: #198754;
+}
+
+.orders-card .card-icon {
+    background: #e8f0ff;
+    color: #0d6efd;
+}
+
+.customers-card .card-icon {
+    background: #f0eaff;
+    color: #6f42c1;
+}
+
+.products-card .card-icon {
+    background: #fff3df;
+    color: #fd7e14;
+}
+
+.warning-card .card-icon {
+    background: #fff0f0;
+    color: #dc3545;
+}
+
+.card-label {
+    color: #6c757d;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.card-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+.dashboard-panel {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 20px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.panel-header span {
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.stock-count {
+    background: #fff0f0;
+    color: #dc3545 !important;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th {
+    padding: 13px 20px;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.dashboard-table td {
+    padding: 15px 20px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.dashboard-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.stock-list {
+    padding: 8px 0;
+}
+
+.stock-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stock-item:last-child {
+    border-bottom: none;
+}
+
+.stock-product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.product-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f1f3f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.stock-product strong {
+    display: block;
+    font-size: 14px;
+}
+
+.stock-product small {
+    display: block;
+    color: #999;
+    margin-top: 2px;
+}
+
+.stock-number {
+    min-width: 40px;
+    text-align: center;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-weight: 700;
+}
+
+.stock-danger {
+    background: #ffe5e5;
+    color: #dc3545;
+}
+
+.stock-warning {
+    background: #fff0d6;
+    color: #fd7e14;
+}
+
+.stock-good {
+    background: #e5f7ec;
+    color: #198754;
+}
+
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: #adb5bd;
+}
+
+.empty-state i {
+    font-size: 35px;
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    margin: 0;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .shop-dashboard {
+        padding: 15px;
+    }
+
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+        gap: 15px;
+    }
+}

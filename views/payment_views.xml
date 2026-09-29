@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+
+    <!-- Payment List -->
+    <record id="view_shop_payment_list" model="ir.ui.view">
+        <field name="name">shop.payment.list</field>
+        <field name="model">shop.payment</field>
+        <field name="arch" type="xml">
+            <list string="Payments">
+                <field name="name"/>
+                <field name="order_id"/>
+                <field name="customer_id"/>
+                <field name="amount"/>
+                <field name="payment_method"/>
+                <field name="payment_date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+
+    <!-- Payment Form -->
+    <record id="view_shop_payment_form" model="ir.ui.view">
+        <field name="name">shop.payment.form</field>
+        <field name="model">shop.payment</field>
+        <field name="arch" type="xml">
+
+            <form string="Payment">
+
+                <header>
+
+                    <button
+                        name="action_confirm_payment"
+                        string="Confirm Payment"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_cancel_payment"
+                        string="Cancel"
+                        type="object"
+                        invisible="state != 'draft'"
+                    />
+
+                    <button
+                        name="action_reset_payment"
+                        string="Reset to Draft"
+                        type="object"
+                        invisible="state == 'draft'"
+                    />
+
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,paid,cancelled"
+                    />
+
+                </header>
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+
+                        <group>
+                            <field name="order_id"/>
+                            <field name="customer_id"/>
+                            <field name="amount"/>
+                        </group>
+
+                        <group>
+                            <field name="payment_method"/>
+                            <field name="payment_date"/>
+                        </group>
+
+                    </group>
+
+                    <group>
+                        <field name="notes"/>
+                    </group>
+
+                </sheet>
+
+            </form>
+
+        </field>
+    </record>
+
+
+    <!-- Payment Action -->
+    <record id="action_shop_payment" model="ir.actions.act_window">
+        <field name="name">Payments</field>
+        <field name="res_model">shop.payment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Payment Menu -->
+    <menuitem
+        id="menu_shop_payments"
+        name="Payments"
+        parent="menu_shop_management"
+        action="action_shop_payment"
+        sequence="40"
+         groups="shop_management.group_shop_manager,shop_management.group_shop_cashier"
+    />
+
+</odoo>

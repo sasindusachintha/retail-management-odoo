@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="seq_shop_sale_order" model="ir.sequence">
+        <field name="name">Shop Sale Order</field>
+        <field name="code">shop.sale.order</field>
+        <field name="prefix">SO/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_shop_stock_movement" model="ir.sequence">
+        <field name="name">Stock Movement</field>
+        <field name="code">shop.stock.movement</field>
+        <field name="prefix">STOCK/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_shop_purchase_order" model="ir.sequence">
+        <field name="name">Shop Purchase Order</field>
+        <field name="code">shop.purchase.order</field>
+        <field name="prefix">PO/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>
