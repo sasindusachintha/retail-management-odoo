@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class ShopPurchaseOrder(models.Model):
@@ -144,23 +144,59 @@ class ShopPurchaseOrder(models.Model):
     def action_cancel(self):
         for purchase in self:
 
-            if purchase.state == 'received':
+            if purchase.state == 'cancelled':
                 raise UserError(
-                    'A received purchase cannot be cancelled '
-                    'because its stock has already been added.'
+                    f'Purchase {purchase.name} is already cancelled.'
                 )
 
-            purchase.state = 'cancelled'
+            if purchase.state == 'received':
+                # Only Managers can reverse a received purchase (Rule #6)
+                if not self.env.user.has_group(
+                    'shop_management.group_shop_manager'
+                ):
+                    raise UserError(
+                        'A received purchase cannot be cancelled. '
+                        'Contact a Shop Manager to reverse it.'
+                    )
+
+                # Reverse stock for each line (Rule #6 / #12)
+                for line in purchase.line_ids:
+                    product = line.product_id
+                    previous_quantity = product.quantity
+                    new_quantity = previous_quantity - line.quantity
+
+                    if new_quantity < 0:
+                        raise UserError(
+                            f'Cannot reverse purchase: reversing "{product.name}" '
+                            f'would result in negative stock '
+                            f'(available: {previous_quantity:.0f}, '
+                            f'to remove: {line.quantity:.0f}).'
+                        )
+
+                    product.write({'quantity': new_quantity})
+
+                    self.env['shop.stock.movement'].create({
+                        'product_id': product.id,
+                        'movement_type': 'out',
+                        'quantity': line.quantity,
+                        'previous_quantity': previous_quantity,
+                        'new_quantity': new_quantity,
+                        'reason': 'Purchase Reversed',
+                        'reference': purchase.name,
+                    })
+
+            purchase.write({'state': 'cancelled'})
 
     def action_reset_draft(self):
         for purchase in self:
 
             if purchase.state == 'received':
                 raise UserError(
-                    'A received purchase cannot be reset to draft.'
+                    'A received purchase cannot be reset to draft. '
+                    'Use Cancel instead.'
                 )
 
-            purchase.state = 'draft'
+            purchase.write({'state': 'draft'})
 
 
 class ShopPurchaseOrderLine(models.Model):
@@ -209,3 +245,25 @@ class ShopPurchaseOrderLine(models.Model):
             line.subtotal = (
                 line.quantity * line.cost_price
             )
+
+    # -------------------------------------------------------
+    # PHASE 2: Purchase line validation constraints (Rule #15)
+    # -------------------------------------------------------
+
+    @api.constrains('quantity')
+    def _check_quantity(self):
+        for line in self:
+            if line.quantity <= 0:
+                raise ValidationError(
+                    f'Quantity for "{line.product_id.name}" '
+                    f'must be greater than 0.'
+                )
+
+    @api.constrains('cost_price')
+    def _check_cost_price(self):
+        for line in self:
+            if line.cost_price < 0:
+                raise ValidationError(
+                    f'Cost price for "{line.product_id.name}" '
+                    f'cannot be negative.'
+                )

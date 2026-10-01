@@ -85,14 +85,15 @@
                         name="action_cancel"
                         string="Cancel"
                         type="object"
-                        invisible="state != 'draft'"
+                        invisible="state == 'cancelled'"
+                        groups="shop_management.group_shop_manager"
                     />
 
                     <button
                         name="action_reset_draft"
                         string="Reset to Draft"
                         type="object"
-                        invisible="state == 'draft'"
+                        invisible="state != 'cancelled'"
                     />
 
                     <button

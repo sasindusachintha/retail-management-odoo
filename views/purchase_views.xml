@@ -45,7 +45,17 @@
                         string="Cancel"
                         type="object"
                         class="btn-secondary"
+                        invisible="state == 'cancelled'"
+                        groups="shop_management.group_shop_manager"
+                    />
+
+                    <button
+                        name="action_cancel"
+                        string="Cancel"
+                        type="object"
+                        class="btn-secondary"
                         invisible="state != 'draft'"
+                        groups="shop_management.group_shop_inventory"
                     />
 
                     <button

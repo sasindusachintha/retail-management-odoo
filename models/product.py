@@ -1,4 +1,6 @@
-from odoo import models, fields
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError
+
 
 
 class ShopProduct(models.Model):
@@ -58,3 +60,32 @@ class ShopProduct(models.Model):
                 product.stock_status = 'low'
             else:
                 product.stock_status = 'ok'
+
+    # -------------------------------------------------------
+    # PHASE 2: Price / quantity constraints (Rule #13)
+    # -------------------------------------------------------
+
+    @api.constrains('price')
+    def _check_price(self):
+        for product in self:
+            if product.price < 0:
+                raise ValidationError(
+                    f'Selling price for "{product.name}" cannot be negative.'
+                )
+
+    @api.constrains('min_stock')
+    def _check_min_stock(self):
+        for product in self:
+            if product.min_stock < 0:
+                raise ValidationError(
+                    f'Minimum stock for "{product.name}" cannot be negative.'
+                )
+
+    @api.constrains('quantity')
+    def _check_quantity_not_negative(self):
+        """Last-resort guard: prevents any write that sets quantity < 0."""
+        for product in self:
+            if product.quantity < 0:
+                raise ValidationError(
+                    f'Stock quantity for "{product.name}" cannot be negative.'
+                )

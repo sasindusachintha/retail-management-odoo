@@ -158,17 +158,18 @@ class ShopStockAdjustment(models.TransientModel):
             new_quantity = self.quantity
             movement_type = 'adjustment'
 
-        product.write({
+        product.sudo().write({
             'quantity': new_quantity
         })
 
-        self.env['shop.stock.movement'].create({
+        self.env['shop.stock.movement'].sudo().create({
             'product_id': product.id,
             'movement_type': movement_type,
             'quantity': self.quantity,
             'previous_quantity': previous_quantity,
             'new_quantity': new_quantity,
             'reason': self.reason,
+            'reference': f'ADJ/{product.name}',
         })
 
         return {

@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class ShopSaleOrder(models.Model):
@@ -118,18 +118,23 @@ class ShopSaleOrder(models.Model):
         for order in self:
 
             # ---------------------------------
-            # BASIC VALIDATION
+            # GUARD: Idempotency / duplicate click protection (Rule #16)
             # ---------------------------------
 
             if order.state != 'draft':
                 raise UserError(
-                    'Only draft orders can be completed.'
+                    'Only draft orders can be completed. '
+                    f'This order is already "{order.state}".'
                 )
 
             if not order.line_ids:
                 raise UserError(
                     'You cannot complete an order without products.'
                 )
+
+            # ---------------------------------
+            # VALIDATE PAYMENT (Rule #7 / #9)
+            # ---------------------------------
 
             if order.amount_paid < order.amount_total:
                 raise UserError(
@@ -139,7 +144,7 @@ class ShopSaleOrder(models.Model):
                 )
 
             # ---------------------------------
-            # VALIDATE PRODUCTS AND STOCK
+            # VALIDATE SALE LINES (Rule #14)
             # ---------------------------------
 
             for line in order.line_ids:
@@ -149,21 +154,55 @@ class ShopSaleOrder(models.Model):
                         'Every order line must have a product.'
                     )
 
+                if not line.product_id.active:
+                    raise UserError(
+                        f'Product "{line.product_id.name}" is inactive '
+                        f'and cannot be sold.'
+                    )
+
                 if line.quantity <= 0:
                     raise UserError(
-                        f'Quantity for {line.product_id.name} '
+                        f'Quantity for "{line.product_id.name}" '
                         f'must be greater than 0.'
                     )
 
-                if line.quantity > line.product_id.quantity:
+                if line.unit_price < 0:
                     raise UserError(
-                        f'Not enough stock for '
-                        f'{line.product_id.name}. '
-                        f'Available: {line.product_id.quantity}'
+                        f'Unit price for "{line.product_id.name}" '
+                        f'cannot be negative.'
                     )
 
             # ---------------------------------
-            # DEDUCT STOCK + CREATE MOVEMENT
+            # CONCURRENCY: Lock product rows before reading stock (Rule #20)
+            # SELECT ... FOR UPDATE prevents two cashiers from overselling.
+            # ---------------------------------
+
+            product_ids = order.line_ids.mapped('product_id').ids
+            self.env.cr.execute(
+                'SELECT id FROM shop_product WHERE id = ANY(%s) FOR UPDATE NOWAIT',
+                (product_ids,)
+            )
+
+            # ---------------------------------
+            # VALIDATE STOCK (Rule #1 / #14)
+            # ---------------------------------
+
+            for line in order.line_ids:
+
+                # Re-read from DB after lock to get current committed value
+                available = line.product_id.quantity
+
+                if line.quantity > available:
+                    raise UserError(
+                        f'Insufficient stock for "{line.product_id.name}". '
+                        f'Available: {available:.0f}, '
+                        f'Requested: {line.quantity:.0f}.'
+                    )
+
+            # ---------------------------------
+            # ATOMIC: DEDUCT STOCK + CREATE MOVEMENTS (Rules #2 / #4 / #12)
+            # All operations within this method share the same DB transaction.
+            # Any exception triggers a full rollback.
             # ---------------------------------
 
             for line in order.line_ids:
@@ -171,15 +210,11 @@ class ShopSaleOrder(models.Model):
                 product = line.product_id
 
                 previous_quantity = product.quantity
+                new_quantity = previous_quantity - line.quantity
 
-                new_quantity = (
-                    previous_quantity - line.quantity
-                )
-
-                # Reduce product stock (sudo so Cashier role can complete sales)
+                # sudo() allows Cashier role to write product stock
                 product.sudo().write({'quantity': new_quantity})
 
-                # Create stock movement (sudo)
                 self.env['shop.stock.movement'].sudo().create({
                     'product_id': product.id,
                     'movement_type': 'out',
@@ -191,38 +226,86 @@ class ShopSaleOrder(models.Model):
                 })
 
             # ---------------------------------
-            # CONFIRM SALE
+            # CONFIRM SALE STATE (Rule #2)
             # ---------------------------------
 
-            order.state = 'confirmed'
+            order.write({'state': 'confirmed'})
 
             # ---------------------------------
-            # CREATE PAYMENT
+            # CREATE PAYMENT RECORD (Rules #2 / #8 / #18)
+            # Guard against duplicate payments if somehow called twice.
             # ---------------------------------
 
-            self.env['shop.payment'].sudo().create({
-                'name': f'PAY-{order.name}',
-                'order_id': order.id,
-                'amount': order.amount_total,
-                'payment_method': order.payment_method,
-                'state': 'paid',
-            })
+            existing_payment = self.env['shop.payment'].sudo().search([
+                ('order_id', '=', order.id),
+                ('state', '=', 'paid'),
+            ], limit=1)
+
+            if not existing_payment:
+                self.env['shop.payment'].sudo().create({
+                    'name': f'PAY-{order.name}',
+                    'order_id': order.id,
+                    'amount': order.amount_total,
+                    'payment_method': order.payment_method,
+                    'state': 'paid',
+                })
 
         return True
 
     def action_cancel(self):
+        """Cancel a sale. For confirmed sales, reverse stock and payment."""
         for order in self:
 
-            if order.state == 'confirmed':
+            if order.state == 'cancelled':
                 raise UserError(
-                    'A completed sale cannot be cancelled here.'
+                    f'Order {order.name} is already cancelled.'
                 )
 
-            order.state = 'cancelled'
+            if order.state == 'confirmed':
+                # Only Managers can cancel a confirmed sale (Rule #5)
+                if not self.env.user.has_group(
+                    'shop_management.group_shop_manager'
+                ):
+                    raise UserError(
+                        'Only a Shop Manager can cancel a completed sale.'
+                    )
+
+                # -- Return stock for each sold line (Rule #5 / #12) --
+                for line in order.line_ids:
+                    product = line.product_id
+                    previous_quantity = product.quantity
+                    new_quantity = previous_quantity + line.quantity
+
+                    product.sudo().write({'quantity': new_quantity})
+
+                    self.env['shop.stock.movement'].sudo().create({
+                        'product_id': product.id,
+                        'movement_type': 'in',
+                        'quantity': line.quantity,
+                        'previous_quantity': previous_quantity,
+                        'new_quantity': new_quantity,
+                        'reason': 'Sale Cancelled',
+                        'reference': order.name,
+                    })
+
+                # -- Reverse payment record (Rule #5) --
+                payments = self.env['shop.payment'].sudo().search([
+                    ('order_id', '=', order.id),
+                    ('state', '=', 'paid'),
+                ])
+                payments.write({'state': 'cancelled'})
+
+            order.write({'state': 'cancelled'})
 
     def action_reset_draft(self):
+        """Reset to draft — only allowed from cancelled state, never from confirmed."""
         for order in self:
-            order.state = 'draft'
+            if order.state == 'confirmed':
+                raise UserError(
+                    'A completed sale cannot be reset to draft. '
+                    'Use Cancel instead.'
+                )
+            order.write({'state': 'draft'})
 
 
 class ShopSaleOrderLine(models.Model):
@@ -270,3 +353,25 @@ class ShopSaleOrderLine(models.Model):
             line.subtotal = (
                 line.quantity * line.unit_price
             )
+
+    # -------------------------------------------------------
+    # PHASE 2: Sale line validation constraints (Rule #14)
+    # -------------------------------------------------------
+
+    @api.constrains('quantity')
+    def _check_quantity(self):
+        for line in self:
+            if line.quantity <= 0:
+                raise ValidationError(
+                    f'Quantity for "{line.product_id.name}" '
+                    f'must be greater than 0.'
+                )
+
+    @api.constrains('unit_price')
+    def _check_unit_price(self):
+        for line in self:
+            if line.unit_price < 0:
+                raise ValidationError(
+                    f'Unit price for "{line.product_id.name}" '
+                    f'cannot be negative.'
+                )
