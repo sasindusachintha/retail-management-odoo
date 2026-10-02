@@ -223,6 +223,7 @@ class ShopSaleOrder(models.Model):
                     'new_quantity': new_quantity,
                     'reason': 'POS Sale',
                     'reference': order.name,
+                    'user_id': self.env.user.id,
                 })
 
             # ---------------------------------
@@ -280,12 +281,13 @@ class ShopSaleOrder(models.Model):
 
                     self.env['shop.stock.movement'].sudo().create({
                         'product_id': product.id,
-                        'movement_type': 'in',
+                        'movement_type': 'sale_reversal',
                         'quantity': line.quantity,
                         'previous_quantity': previous_quantity,
                         'new_quantity': new_quantity,
-                        'reason': 'Sale Cancelled',
+                        'reason': 'Sale Reversed',
                         'reference': order.name,
+                        'user_id': self.env.user.id,
                     })
 
                 # -- Reverse payment record (Rule #5) --

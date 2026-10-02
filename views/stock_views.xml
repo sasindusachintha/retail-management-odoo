@@ -1,33 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <!-- Stock Movements -->
+    <!-- ============================================================
+         STOCK MOVEMENT SEARCH VIEW
+    ============================================================ -->
+
+    <record id="view_shop_stock_movement_search" model="ir.ui.view">
+        <field name="name">shop.stock.movement.search</field>
+        <field name="model">shop.stock.movement</field>
+        <field name="arch" type="xml">
+            <search string="Search Stock Movements">
+
+                <field name="product_id" string="Product"/>
+                <field name="reference" string="Reference"/>
+                <field name="reason" string="Reason"/>
+                <field name="user_id" string="User"/>
+
+                <!-- Movement type filters -->
+                <filter name="type_purchase" string="Purchases"
+                        domain="[('movement_type', '=', 'in')]"/>
+                <filter name="type_sale" string="Sales"
+                        domain="[('movement_type', '=', 'out')]"/>
+                <filter name="type_adjustment" string="Adjustments"
+                        domain="[('movement_type', '=', 'adjustment')]"/>
+                <filter name="type_sale_reversal" string="Sale Reversals"
+                        domain="[('movement_type', '=', 'sale_reversal')]"/>
+                <filter name="type_purchase_reversal" string="Purchase Reversals"
+                        domain="[('movement_type', '=', 'purchase_reversal')]"/>
+
+                <separator/>
+
+                <!-- Date filters -->
+                <filter name="today" string="Today"
+                        domain="[('movement_date', '&gt;=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('movement_date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d 00:00:00'))]"/>
+
+                <!-- Group By -->
+                <group>
+                    <filter name="group_product" string="Product"
+                            context="{'group_by': 'product_id'}"/>
+                    <filter name="group_type" string="Movement Type"
+                            context="{'group_by': 'movement_type'}"/>
+                    <filter name="group_user" string="User"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_date" string="Date"
+                            context="{'group_by': 'movement_date:day'}"/>
+                </group>
+
+            </search>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         STOCK MOVEMENT LIST
+    ============================================================ -->
 
     <record id="view_shop_stock_movement_list" model="ir.ui.view">
         <field name="name">shop.stock.movement.list</field>
         <field name="model">shop.stock.movement</field>
         <field name="arch" type="xml">
-            <list string="Stock Movements">
-                <field name="name"/>
-                <field name="movement_date"/>
-                <field name="product_id"/>
-                <field name="movement_type"/>
-                <field name="quantity"/>
-                <field name="previous_quantity"/>
-                <field name="new_quantity"/>
-                <field name="reason"/>
-                <field name="reference"/>
-                <field name="user_id"/>
+            <list string="Stock Movements" create="false" delete="false">
+                <field name="name" string="Reference"/>
+                <field name="movement_date" string="Date"/>
+                <field name="product_id" string="Product"/>
+                <field name="movement_type"
+                       string="Type"
+                       decoration-success="movement_type == 'in'"
+                       decoration-danger="movement_type == 'out'"
+                       decoration-info="movement_type == 'adjustment'"
+                       decoration-warning="movement_type in ('sale_reversal', 'purchase_reversal')"
+                       widget="badge"
+                />
+                <field name="quantity" string="Qty"/>
+                <field name="previous_quantity" string="Before"/>
+                <field name="new_quantity" string="After"/>
+                <field name="reason" string="Reason"/>
+                <field name="reference" string="Document"/>
+                <field name="user_id" string="User"/>
             </list>
         </field>
     </record>
 
 
+    <!-- ============================================================
+         STOCK MOVEMENT FORM
+    ============================================================ -->
+
     <record id="view_shop_stock_movement_form" model="ir.ui.view">
         <field name="name">shop.stock.movement.form</field>
         <field name="model">shop.stock.movement</field>
         <field name="arch" type="xml">
-            <form string="Stock Movement">
+            <form string="Stock Movement" create="false" edit="false">
                 <sheet>
 
                     <div class="oe_title">
@@ -62,14 +127,21 @@
     </record>
 
 
+    <!-- ============================================================
+         STOCK MOVEMENT ACTION
+    ============================================================ -->
+
     <record id="action_shop_stock_movements" model="ir.actions.act_window">
         <field name="name">Stock Movements</field>
         <field name="res_model">shop.stock.movement</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_shop_stock_movement_search"/>
     </record>
 
 
-    <!-- Stock Adjustment -->
+    <!-- ============================================================
+         STOCK ADJUSTMENT FORM (improved with preview)
+    ============================================================ -->
 
     <record id="view_shop_stock_adjustment_form" model="ir.ui.view">
         <field name="name">shop.stock.adjustment.form</field>
@@ -79,13 +151,14 @@
 
                 <group>
                     <field name="product_id"/>
-                    <field name="current_quantity" readonly="1"/>
+                    <field name="current_quantity" readonly="1" string="Current Stock"/>
                 </group>
 
                 <group>
                     <field name="adjustment_type"/>
                     <field name="quantity"/>
-                    <field name="reason"/>
+                    <field name="new_quantity_preview" readonly="1" string="New Stock (Preview)"/>
+                    <field name="reason" placeholder="e.g. Damaged goods, Stocktake correction"/>
                 </group>
 
                 <footer>
@@ -108,6 +181,10 @@
     </record>
 
 
+    <!-- ============================================================
+         STOCK ADJUSTMENT ACTION
+    ============================================================ -->
+
     <record id="action_shop_stock_adjustment" model="ir.actions.act_window">
         <field name="name">Stock Adjustment</field>
         <field name="res_model">shop.stock.adjustment</field>
@@ -116,7 +193,35 @@
     </record>
 
 
-    <!-- Products Stock List -->
+    <!-- ============================================================
+         PRODUCTS STOCK LIST (Stock Overview)
+    ============================================================ -->
+
+    <record id="view_shop_product_stock_search" model="ir.ui.view">
+        <field name="name">shop.product.stock.search</field>
+        <field name="model">shop.product</field>
+        <field name="arch" type="xml">
+            <search string="Search Stock">
+                <field name="name" string="Product"/>
+                <field name="sku" string="SKU"/>
+                <field name="category_id" string="Category"/>
+
+                <filter name="low_stock" string="Low Stock"
+                        domain="[('stock_status', '=', 'low')]"/>
+                <filter name="out_of_stock" string="Out of Stock"
+                        domain="[('stock_status', '=', 'out')]"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+
+                <group>
+                    <filter name="group_category" string="Category"
+                            context="{'group_by': 'category_id'}"/>
+                    <filter name="group_status" string="Stock Status"
+                            context="{'group_by': 'stock_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 
     <record id="view_shop_product_stock_list" model="ir.ui.view">
         <field name="name">shop.product.stock.list</field>
@@ -124,11 +229,17 @@
         <field name="arch" type="xml">
             <list string="Stock">
                 <field name="name"/>
-                <field name="category"/>
-                <field name="quantity"/>
-                <field name="min_stock"/>
-                <field name="stock_status"/>
-                <field name="price"/>
+                <field name="sku" string="SKU"/>
+                <field name="category_id" string="Category"/>
+                <field name="quantity" string="Stock"/>
+                <field name="min_stock" string="Min Stock"/>
+                <field name="stock_status"
+                       decoration-danger="stock_status == 'out'"
+                       decoration-warning="stock_status == 'low'"
+                       decoration-success="stock_status == 'ok'"
+                       widget="badge"
+                />
+                <field name="price" string="Selling Price"/>
                 <field name="active"/>
             </list>
         </field>
@@ -140,10 +251,14 @@
         <field name="res_model">shop.product</field>
         <field name="view_mode">list</field>
         <field name="view_id" ref="view_shop_product_stock_list"/>
+        <field name="search_view_id" ref="view_shop_product_stock_search"/>
+        <field name="context">{'search_default_active': 1}</field>
     </record>
 
 
-    <!-- Menus -->
+    <!-- ============================================================
+         MENUS
+    ============================================================ -->
 
     <menuitem
         id="menu_shop_stock"
@@ -179,5 +294,6 @@
         sequence="3"
         groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
     />
+
 
 </odoo>

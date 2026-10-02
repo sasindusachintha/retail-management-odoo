@@ -1,4 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_shop_product_category_manager,access.shop.product.category.manager,model_shop_product_category,shop_management.group_shop_manager,1,1,1,1
+access_shop_product_category_inventory,access.shop.product.category.inventory,model_shop_product_category,shop_management.group_shop_inventory,1,1,1,1
+access_shop_product_category_cashier,access.shop.product.category.cashier,model_shop_product_category,shop_management.group_shop_cashier,1,0,0,0
 access_shop_product_manager,access.shop.product.manager,model_shop_product,shop_management.group_shop_manager,1,1,1,1
 access_shop_product_inventory,access.shop.product.inventory,model_shop_product,shop_management.group_shop_inventory,1,1,1,1
 access_shop_product_cashier,access.shop.product.cashier,model_shop_product,shop_management.group_shop_cashier,1,0,0,0

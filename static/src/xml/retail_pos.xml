@@ -23,6 +23,30 @@
                         t-model="state.search"
                     />
 
+                    <!-- Barcode scanner input -->
+                    <div class="barcode-area">
+                        <input
+                            type="text"
+                            placeholder="Scan barcode &amp; press Enter..."
+                            t-model="state.barcodeInput"
+                            t-on-keydown="onBarcodeKeydown"
+                            class="barcode-input"
+                        />
+                        <button
+                            class="barcode-btn"
+                            t-on-click="searchByBarcode"
+                        >
+                            🔍
+                        </button>
+                    </div>
+
+                    <!-- Barcode error message -->
+                    <t t-if="state.barcodeError">
+                        <div class="barcode-error">
+                            <t t-esc="state.barcodeError"/>
+                        </div>
+                    </t>
+
                 </div>
 
             </header>
@@ -198,7 +222,7 @@
                                     </div>
 
                                     <div class="product-category">
-                                        <t t-esc="product.category || 'General'"/>
+                                        <t t-esc="product.category_id ? product.category_id[1] : 'General'"/>
                                     </div>
 
                                     <div class="product-price">

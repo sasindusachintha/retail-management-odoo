@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class ShopStockMovement(models.Model):
@@ -23,9 +23,11 @@ class ShopStockMovement(models.Model):
 
     movement_type = fields.Selection(
         [
-            ('in', 'Stock In'),
-            ('out', 'Stock Out'),
+            ('in', 'Purchase'),
+            ('out', 'Sale'),
             ('adjustment', 'Adjustment'),
+            ('sale_reversal', 'Sale Reversal'),
+            ('purchase_reversal', 'Purchase Reversal'),
         ],
         string='Movement Type',
         required=True
@@ -94,7 +96,7 @@ class ShopStockAdjustment(models.TransientModel):
         [
             ('add', 'Add Stock'),
             ('remove', 'Remove Stock'),
-            ('set', 'Set Stock'),
+            ('set', 'Set to Exact Quantity'),
         ],
         string='Adjustment Type',
         required=True,
@@ -118,11 +120,33 @@ class ShopStockAdjustment(models.TransientModel):
         readonly=True
     )
 
+    new_quantity_preview = fields.Float(
+        string='New Stock (Preview)',
+        compute='_compute_new_quantity_preview',
+        readonly=True
+    )
+
+    @api.depends('product_id', 'adjustment_type', 'quantity')
+    def _compute_new_quantity_preview(self):
+        for record in self:
+            if not record.product_id:
+                record.new_quantity_preview = 0
+                continue
+            current = record.product_id.quantity
+            if record.adjustment_type == 'add':
+                record.new_quantity_preview = current + record.quantity
+            elif record.adjustment_type == 'remove':
+                record.new_quantity_preview = current - record.quantity
+            elif record.adjustment_type == 'set':
+                record.new_quantity_preview = record.quantity
+            else:
+                record.new_quantity_preview = current
+
     @api.constrains('quantity')
     def _check_quantity(self):
         for record in self:
             if record.quantity <= 0:
-                raise UserError(
+                raise ValidationError(
                     'Adjustment quantity must be greater than zero.'
                 )
 
@@ -131,6 +155,9 @@ class ShopStockAdjustment(models.TransientModel):
 
         if not self.product_id:
             raise UserError('Please select a product.')
+
+        if not self.reason or not self.reason.strip():
+            raise UserError('A reason is required for stock adjustments.')
 
         if self.quantity <= 0:
             raise UserError(
@@ -142,11 +169,11 @@ class ShopStockAdjustment(models.TransientModel):
 
         if self.adjustment_type == 'add':
             new_quantity = previous_quantity + self.quantity
-            movement_type = 'in'
+            movement_qty = self.quantity
 
         elif self.adjustment_type == 'remove':
             new_quantity = previous_quantity - self.quantity
-            movement_type = 'out'
+            movement_qty = self.quantity
 
             if new_quantity < 0:
                 raise UserError(
@@ -154,22 +181,30 @@ class ShopStockAdjustment(models.TransientModel):
                     f'Only {previous_quantity} units are available.'
                 )
 
-        else:
+        else:  # set
             new_quantity = self.quantity
-            movement_type = 'adjustment'
+            movement_qty = abs(new_quantity - previous_quantity)
+
+            if new_quantity < 0:
+                raise UserError(
+                    'New stock quantity cannot be negative.'
+                )
 
         product.sudo().write({
             'quantity': new_quantity
         })
 
+        diff = new_quantity - previous_quantity
+
         self.env['shop.stock.movement'].sudo().create({
             'product_id': product.id,
-            'movement_type': movement_type,
-            'quantity': self.quantity,
+            'movement_type': 'adjustment',
+            'quantity': movement_qty if diff >= 0 else -movement_qty,
             'previous_quantity': previous_quantity,
             'new_quantity': new_quantity,
             'reason': self.reason,
             'reference': f'ADJ/{product.name}',
+            'user_id': self.env.user.id,
         })
 
         return {

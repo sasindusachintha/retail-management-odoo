@@ -1,6 +1,6 @@
 {
     'name': 'Shop Management',
-    'version': '1.0',
+    'version': '1.1',
     'category': 'Sales',
     'summary': 'Complete retail shop management system',
     'description': """

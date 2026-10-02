@@ -48,6 +48,26 @@
                         <field name="notes"/>
                     </group>
 
+                    <!-- Products supplied by this supplier -->
+                    <group string="Products Supplied">
+                        <field name="product_ids"
+                               nolabel="1"
+                               readonly="1">
+                            <list string="Products" create="false">
+                                <field name="name"/>
+                                <field name="sku" string="SKU"/>
+                                <field name="price" string="Selling Price"/>
+                                <field name="cost_price" string="Purchase Cost"/>
+                                <field name="quantity" string="Stock"/>
+                                <field name="stock_status" widget="badge"
+                                       decoration-danger="stock_status == 'out'"
+                                       decoration-warning="stock_status == 'low'"
+                                       decoration-success="stock_status == 'ok'"
+                                />
+                            </list>
+                        </field>
+                    </group>
+
                 </sheet>
 
             </form>

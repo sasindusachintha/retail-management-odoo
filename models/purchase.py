@@ -133,8 +133,9 @@ class ShopPurchaseOrder(models.Model):
                     'quantity': line.quantity,
                     'previous_quantity': previous_quantity,
                     'new_quantity': new_quantity,
-                    'reason': 'Purchase',
+                    'reason': 'Purchase Received',
                     'reference': purchase.name,
+                    'user_id': self.env.user.id,
                 })
 
             purchase.state = 'received'
@@ -177,12 +178,13 @@ class ShopPurchaseOrder(models.Model):
 
                     self.env['shop.stock.movement'].create({
                         'product_id': product.id,
-                        'movement_type': 'out',
+                        'movement_type': 'purchase_reversal',
                         'quantity': line.quantity,
                         'previous_quantity': previous_quantity,
                         'new_quantity': new_quantity,
                         'reason': 'Purchase Reversed',
                         'reference': purchase.name,
+                        'user_id': self.env.user.id,
                     })
 
             purchase.write({'state': 'cancelled'})

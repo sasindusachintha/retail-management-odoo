@@ -19,6 +19,9 @@ export class RetailPOS extends Component {
             search: "",
             category: "all",
 
+            barcodeInput: "",
+            barcodeError: "",
+
             customer_id: "",
             discount: 0,
 
@@ -41,7 +44,9 @@ export class RetailPOS extends Component {
                 "name",
                 "price",
                 "quantity",
-                "category"
+                "category_id",
+                "barcode",
+                "image",
             ]
         );
 
@@ -55,10 +60,18 @@ export class RetailPOS extends Component {
         );
     }
 
+    // ------------------------------------------------------------------
+    // Derived from category_id (Many2one) — returns display name string
+    // ------------------------------------------------------------------
+
     get categories() {
 
         const categories = this.state.products
-            .map(product => product.category)
+            .map(product =>
+                product.category_id
+                    ? product.category_id[1]
+                    : null
+            )
             .filter(category => category);
 
         return [...new Set(categories)];
@@ -74,15 +87,61 @@ export class RetailPOS extends Component {
 
             const matchesSearch =
                 !search ||
-                product.name.toLowerCase().includes(search);
+                product.name.toLowerCase().includes(search) ||
+                (product.barcode && product.barcode.includes(search));
+
+            const categoryName = product.category_id
+                ? product.category_id[1]
+                : "";
 
             const matchesCategory =
                 this.state.category === "all" ||
-                product.category === this.state.category;
+                categoryName === this.state.category;
 
             return matchesSearch && matchesCategory;
         });
     }
+
+    // ------------------------------------------------------------------
+    // Barcode scanning / entry
+    // ------------------------------------------------------------------
+
+    onBarcodeKeydown(event) {
+        // Trigger search on Enter key press (typical scanner behaviour)
+        if (event.key === "Enter") {
+            this.searchByBarcode();
+        }
+    }
+
+    searchByBarcode() {
+        const barcode = this.state.barcodeInput.trim();
+        this.state.barcodeError = "";
+
+        if (!barcode) {
+            return;
+        }
+
+        const product = this.state.products.find(
+            p => p.barcode && p.barcode === barcode
+        );
+
+        if (!product) {
+            this.state.barcodeError =
+                `Product not found for barcode: ${barcode}`;
+            // Auto-clear error after 4 seconds
+            setTimeout(() => {
+                this.state.barcodeError = "";
+            }, 4000);
+            return;
+        }
+
+        this.addProduct(product);
+        this.state.barcodeInput = "";
+    }
+
+    // ------------------------------------------------------------------
+    // Cart management
+    // ------------------------------------------------------------------
 
     addProduct(product) {
 
@@ -314,6 +373,8 @@ export class RetailPOS extends Component {
         this.state.amount_paid = 0;
         this.state.customer_id = "";
         this.state.payment_method = "cash";
+        this.state.barcodeInput = "";
+        this.state.barcodeError = "";
     }
 
     printReceipt() {

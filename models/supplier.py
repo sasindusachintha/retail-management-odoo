@@ -31,3 +31,9 @@ class ShopSupplier(models.Model):
         string='Active',
         default=True
     )
+
+    product_ids = fields.One2many(
+        'shop.product',
+        'supplier_id',
+        string='Products'
+    )
