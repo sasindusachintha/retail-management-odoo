@@ -172,6 +172,18 @@ class ShopSaleOrder(models.Model):
                         f'cannot be negative.'
                     )
 
+                if line.discount < 0:
+                    raise UserError(
+                        f'Discount for "{line.product_id.name}" '
+                        f'cannot be negative.'
+                    )
+
+                if line.discount > (line.quantity * line.unit_price):
+                    raise UserError(
+                        f'Discount for "{line.product_id.name}" '
+                        f'cannot exceed total line price.'
+                    )
+
             # ---------------------------------
             # CONCURRENCY: Lock product rows before reading stock (Rule #20)
             # SELECT ... FOR UPDATE prevents two cashiers from overselling.
@@ -234,7 +246,7 @@ class ShopSaleOrder(models.Model):
 
             # ---------------------------------
             # CREATE PAYMENT RECORD (Rules #2 / #8 / #18)
-            # Guard against duplicate payments if somehow called twice.
+            # Guard against duplicate payments if payment records exist already.
             # ---------------------------------
 
             existing_payment = self.env['shop.payment'].sudo().search([
@@ -252,6 +264,87 @@ class ShopSaleOrder(models.Model):
                 })
 
         return True
+
+    @api.model
+    def create_pos_sale(self, pos_data):
+        """Create and confirm a POS sale atomically in a single RPC transaction."""
+        if not pos_data or not pos_data.get('lines'):
+            raise UserError('You cannot complete an order without products.')
+
+        customer_id = pos_data.get('customer_id') or False
+        order_discount = float(pos_data.get('discount') or 0.0)
+        payment_method = pos_data.get('payment_method') or 'cash'
+        amount_paid = float(pos_data.get('amount_paid') or 0.0)
+
+        line_vals_list = []
+        for line in pos_data.get('lines', []):
+            product_id = line.get('product_id')
+            qty = float(line.get('quantity') or 0)
+            unit_price = float(line.get('unit_price') or 0)
+            line_disc = float(line.get('discount') or 0)
+
+            if not product_id:
+                raise UserError('Every order line must specify a product.')
+            if qty <= 0:
+                raise UserError('Product quantity must be greater than 0.')
+
+            line_vals_list.append((0, 0, {
+                'product_id': product_id,
+                'quantity': qty,
+                'unit_price': unit_price,
+                'discount': line_disc,
+            }))
+
+        order = self.create({
+            'customer_id': customer_id,
+            'discount': order_discount,
+            'payment_method': payment_method,
+            'amount_paid': amount_paid,
+            'line_ids': line_vals_list,
+        })
+
+        # Process multi-payment breakdown if provided
+        payments_list = pos_data.get('payments')
+        if payments_list and isinstance(payments_list, list):
+            for p_info in payments_list:
+                p_amount = float(p_info.get('amount') or 0)
+                p_method = p_info.get('method') or payment_method
+                if p_amount > 0:
+                    self.env['shop.payment'].sudo().create({
+                        'name': f'PAY-{order.name}-{p_method.upper()}',
+                        'order_id': order.id,
+                        'amount': p_amount,
+                        'payment_method': p_method,
+                        'state': 'paid',
+                    })
+
+        # Confirm sale (deducts stock, logs movement, completes payment)
+        order.action_confirm()
+
+        return {
+            'id': order.id,
+            'name': order.name,
+            'order_date': fields.Datetime.to_string(order.order_date),
+            'customer_name': order.customer_id.name if order.customer_id else 'Walk-in Customer',
+            'cashier_name': self.env.user.name,
+            'subtotal': order.subtotal,
+            'discount': order.discount,
+            'amount_total': order.amount_total,
+            'amount_paid': order.amount_paid,
+            'change_amount': order.change_amount,
+            'payment_method': order.payment_method,
+            'lines': [
+                {
+                    'product_id': l.product_id.id,
+                    'product_name': l.product_id.name,
+                    'quantity': l.quantity,
+                    'unit_price': l.unit_price,
+                    'discount': l.discount,
+                    'subtotal': l.subtotal,
+                }
+                for l in order.line_ids
+            ]
+        }
 
     def action_cancel(self):
         """Cancel a sale. For confirmed sales, reverse stock and payment."""
@@ -338,6 +431,11 @@ class ShopSaleOrderLine(models.Model):
         required=True
     )
 
+    discount = fields.Float(
+        string='Discount',
+        default=0
+    )
+
     subtotal = fields.Float(
         string='Subtotal',
         compute='_compute_subtotal',
@@ -349,12 +447,12 @@ class ShopSaleOrderLine(models.Model):
         if self.product_id:
             self.unit_price = self.product_id.price
 
-    @api.depends('quantity', 'unit_price')
+    @api.depends('quantity', 'unit_price', 'discount')
     def _compute_subtotal(self):
         for line in self:
-            line.subtotal = (
-                line.quantity * line.unit_price
-            )
+            discount = max(line.discount, 0)
+            gross = line.quantity * line.unit_price
+            line.subtotal = max(gross - discount, 0)
 
     # -------------------------------------------------------
     # PHASE 2: Sale line validation constraints (Rule #14)
@@ -376,4 +474,18 @@ class ShopSaleOrderLine(models.Model):
                 raise ValidationError(
                     f'Unit price for "{line.product_id.name}" '
                     f'cannot be negative.'
+                )
+
+    @api.constrains('discount')
+    def _check_discount(self):
+        for line in self:
+            if line.discount < 0:
+                raise ValidationError(
+                    f'Discount for "{line.product_id.name}" '
+                    f'cannot be negative.'
+                )
+            if line.discount > (line.quantity * line.unit_price):
+                raise ValidationError(
+                    f'Discount for "{line.product_id.name}" '
+                    f'cannot exceed the line gross total.'
                 )

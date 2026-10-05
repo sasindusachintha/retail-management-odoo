@@ -13,6 +13,7 @@ export class RetailPOS extends Component {
 
         this.state = useState({
             products: [],
+            categories: [],
             customers: [],
             cart: [],
 
@@ -28,6 +29,17 @@ export class RetailPOS extends Component {
             payment_method: "cash",
             amount_paid: 0,
 
+            isMultiPayment: false,
+            multiPayments: {
+                cash: 0,
+                card: 0,
+                bank: 0,
+            },
+
+            showCustomerModal: false,
+            newCustomerName: "",
+            newCustomerPhone: "",
+
             processing: false,
             completedOrder: null,
         });
@@ -36,7 +48,6 @@ export class RetailPOS extends Component {
     }
 
     async loadData() {
-
         this.state.products = await this.orm.searchRead(
             "shop.product",
             [["active", "=", true]],
@@ -46,9 +57,17 @@ export class RetailPOS extends Component {
                 "quantity",
                 "category_id",
                 "barcode",
+                "sku",
                 "image",
             ]
         );
+
+        const categoryRecords = await this.orm.searchRead(
+            "shop.product.category",
+            [["active", "=", true]],
+            ["name"]
+        );
+        this.state.categories = categoryRecords.map(c => c.name);
 
         this.state.customers = await this.orm.searchRead(
             "shop.customer",
@@ -60,35 +79,28 @@ export class RetailPOS extends Component {
         );
     }
 
-    // ------------------------------------------------------------------
-    // Derived from category_id (Many2one) — returns display name string
-    // ------------------------------------------------------------------
-
-    get categories() {
-
-        const categories = this.state.products
+    get categoryList() {
+        const prodCategories = this.state.products
             .map(product =>
                 product.category_id
                     ? product.category_id[1]
                     : null
             )
-            .filter(category => category);
+            .filter(Boolean);
 
-        return [...new Set(categories)];
+        const combined = [...this.state.categories, ...prodCategories];
+        return [...new Set(combined)];
     }
 
     get filteredProducts() {
-
-        const search = this.state.search
-            .toLowerCase()
-            .trim();
+        const search = this.state.search.toLowerCase().trim();
 
         return this.state.products.filter(product => {
-
             const matchesSearch =
                 !search ||
                 product.name.toLowerCase().includes(search) ||
-                (product.barcode && product.barcode.includes(search));
+                (product.barcode && product.barcode.toLowerCase().includes(search)) ||
+                (product.sku && product.sku.toLowerCase().includes(search));
 
             const categoryName = product.category_id
                 ? product.category_id[1]
@@ -107,7 +119,6 @@ export class RetailPOS extends Component {
     // ------------------------------------------------------------------
 
     onBarcodeKeydown(event) {
-        // Trigger search on Enter key press (typical scanner behaviour)
         if (event.key === "Enter") {
             this.searchByBarcode();
         }
@@ -122,13 +133,11 @@ export class RetailPOS extends Component {
         }
 
         const product = this.state.products.find(
-            p => p.barcode && p.barcode === barcode
+            p => p.barcode && p.barcode.trim().toLowerCase() === barcode.toLowerCase()
         );
 
         if (!product) {
-            this.state.barcodeError =
-                `Product not found for barcode: ${barcode}`;
-            // Auto-clear error after 4 seconds
+            this.state.barcodeError = `Product not found for barcode: ${barcode}`;
             setTimeout(() => {
                 this.state.barcodeError = "";
             }, 4000);
@@ -144,11 +153,8 @@ export class RetailPOS extends Component {
     // ------------------------------------------------------------------
 
     addProduct(product) {
-
         if (product.quantity <= 0) {
-            alert(
-                `${product.name} is out of stock.`
-            );
+            alert(`${product.name} is out of stock.`);
             return;
         }
 
@@ -157,11 +163,11 @@ export class RetailPOS extends Component {
         );
 
         if (existing) {
-
             if (existing.quantity < product.quantity) {
                 existing.quantity++;
+            } else {
+                alert(`Cannot add more. Available stock for "${product.name}": ${product.quantity}`);
             }
-
             return;
         }
 
@@ -171,18 +177,19 @@ export class RetailPOS extends Component {
             price: product.price,
             available: product.quantity,
             quantity: 1,
+            discount: 0,
         });
     }
 
     increase(item) {
-
         if (item.quantity < item.available) {
             item.quantity++;
+        } else {
+            alert(`Cannot exceed available stock (${item.available}) for "${item.name}".`);
         }
     }
 
     decrease(item) {
-
         if (item.quantity > 1) {
             item.quantity--;
         } else {
@@ -190,90 +197,134 @@ export class RetailPOS extends Component {
         }
     }
 
+    updateLineDiscount(item, val) {
+        let disc = Number(val) || 0;
+        if (disc < 0) disc = 0;
+        const maxDisc = item.quantity * item.price;
+        if (disc > maxDisc) disc = maxDisc;
+        item.discount = disc;
+    }
+
     removeItem(item) {
-
         const index = this.state.cart.indexOf(item);
-
         if (index !== -1) {
             this.state.cart.splice(index, 1);
         }
     }
 
     clearCart() {
-
         this.state.cart.splice(0);
-
         this.state.discount = 0;
         this.state.amount_paid = 0;
+        this.state.multiPayments = { cash: 0, card: 0, bank: 0 };
+    }
+
+    lineSubtotal(item) {
+        const gross = item.price * item.quantity;
+        const disc = Number(item.discount) || 0;
+        return Math.max(gross - disc, 0);
     }
 
     get subtotal() {
-
         return this.state.cart.reduce(
-            (total, item) =>
-                total + item.price * item.quantity,
+            (total, item) => total + this.lineSubtotal(item),
             0
         );
     }
 
     get discount() {
-
-        const discount = Number(
-            this.state.discount
-        ) || 0;
-
-        return Math.min(
-            Math.max(discount, 0),
-            this.subtotal
-        );
+        const discount = Number(this.state.discount) || 0;
+        return Math.min(Math.max(discount, 0), this.subtotal);
     }
 
     get total() {
+        return Math.max(this.subtotal - this.discount, 0);
+    }
 
-        return Math.max(
-            this.subtotal - this.discount,
-            0
-        );
+    get totalPaid() {
+        if (this.state.isMultiPayment) {
+            const c = Number(this.state.multiPayments.cash) || 0;
+            const cd = Number(this.state.multiPayments.card) || 0;
+            const b = Number(this.state.multiPayments.bank) || 0;
+            return Math.max(0, c + cd + b);
+        } else {
+            return Math.max(0, Number(this.state.amount_paid) || 0);
+        }
     }
 
     get change() {
-
-        const paid =
-            Number(this.state.amount_paid) || 0;
-
-        return Math.max(
-            paid - this.total,
-            0
-        );
+        return Math.max(this.totalPaid - this.total, 0);
     }
 
     get canCompleteSale() {
-
-        const paid =
-            Number(this.state.amount_paid) || 0;
-
         return (
             this.state.cart.length > 0 &&
-            paid >= this.total &&
+            this.totalPaid >= this.total &&
             !this.state.processing
         );
     }
 
-    async completeSale() {
+    toggleMultiPayment() {
+        this.state.isMultiPayment = !this.state.isMultiPayment;
+        if (this.state.isMultiPayment) {
+            this.state.multiPayments = { cash: this.total, card: 0, bank: 0 };
+        } else {
+            this.state.amount_paid = this.total;
+        }
+    }
 
+    // ------------------------------------------------------------------
+    // Quick Customer Creation
+    // ------------------------------------------------------------------
+
+    openCustomerModal() {
+        this.state.newCustomerName = "";
+        this.state.newCustomerPhone = "";
+        this.state.showCustomerModal = true;
+    }
+
+    closeCustomerModal() {
+        this.state.showCustomerModal = false;
+    }
+
+    async createCustomer() {
+        const name = this.state.newCustomerName.trim();
+        if (!name) {
+            alert("Customer name is required.");
+            return;
+        }
+
+        try {
+            const customerId = await this.orm.create("shop.customer", [{
+                name: name,
+                phone: this.state.newCustomerPhone.trim(),
+            }]);
+
+            const id = Array.isArray(customerId) ? customerId[0] : customerId;
+            await this.loadData();
+            this.state.customer_id = id;
+            this.closeCustomerModal();
+        } catch (error) {
+            console.error(error);
+            alert(error?.data?.message || error?.message || "Failed to create customer.");
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Sale Confirmation (Atomic)
+    // ------------------------------------------------------------------
+
+    async completeSale() {
         if (!this.state.cart.length) {
             alert("Cart is empty.");
             return;
         }
 
-        const paid =
-            Number(this.state.amount_paid) || 0;
-
-        if (paid < this.total) {
+        if (this.totalPaid < this.total) {
             alert(
                 `Payment is insufficient.\n\n` +
-                `Total: Rs. ${this.total.toFixed(2)}\n` +
-                `Paid: Rs. ${paid.toFixed(2)}`
+                `Total Required: Rs. ${this.total.toFixed(2)}\n` +
+                `Amount Received: Rs. ${this.totalPaid.toFixed(2)}`
             );
             return;
         }
@@ -281,96 +332,71 @@ export class RetailPOS extends Component {
         this.state.processing = true;
 
         try {
-
-            const orderIds = await this.orm.create(
-                "shop.sale.order",
-                [{
-                    customer_id:
-                        this.state.customer_id
-                        ? Number(this.state.customer_id)
-                        : false,
-
-                    discount: this.discount,
-
-                    payment_method:
-                        this.state.payment_method,
-
-                    amount_paid: paid,
-                }]
-            );
-
-            const orderId =
-                Array.isArray(orderIds)
-                    ? orderIds[0]
-                    : orderIds;
-
-            for (const item of this.state.cart) {
-
-                await this.orm.create(
-                    "shop.sale.order.line",
-                    [{
-                        order_id: orderId,
-                        product_id: item.product_id,
-                        quantity: item.quantity,
-                        unit_price: item.price,
-                    }]
-                );
+            const paymentBreakdown = [];
+            if (this.state.isMultiPayment) {
+                if (Number(this.state.multiPayments.cash) > 0) {
+                    paymentBreakdown.push({ method: "cash", amount: Number(this.state.multiPayments.cash) });
+                }
+                if (Number(this.state.multiPayments.card) > 0) {
+                    paymentBreakdown.push({ method: "card", amount: Number(this.state.multiPayments.card) });
+                }
+                if (Number(this.state.multiPayments.bank) > 0) {
+                    paymentBreakdown.push({ method: "bank", amount: Number(this.state.multiPayments.bank) });
+                }
+            } else {
+                paymentBreakdown.push({ method: this.state.payment_method, amount: this.totalPaid });
             }
 
-            await this.orm.call(
+            const posData = {
+                customer_id: this.state.customer_id ? Number(this.state.customer_id) : false,
+                discount: this.discount,
+                payment_method: this.state.payment_method,
+                amount_paid: this.totalPaid,
+                payments: paymentBreakdown,
+                lines: this.state.cart.map(item => ({
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    unit_price: item.price,
+                    discount: item.discount || 0,
+                })),
+            };
+
+            const order = await this.orm.call(
                 "shop.sale.order",
-                "action_confirm",
-                [[orderId]]
+                "create_pos_sale",
+                [posData]
             );
 
-            const order = await this.orm.read(
-                "shop.sale.order",
-                [orderId],
-                [
-                    "name",
-                    "order_date",
-                    "subtotal",
-                    "discount",
-                    "amount_total",
-                    "amount_paid",
-                    "change_amount",
-                    "payment_method",
-                    "customer_id",
-                ]
-            );
-
-            this.state.completedOrder = order[0];
+            this.state.completedOrder = order;
 
             await this.loadData();
 
             this.state.cart.splice(0);
             this.state.discount = 0;
             this.state.amount_paid = 0;
+            this.state.multiPayments = { cash: 0, card: 0, bank: 0 };
+            this.state.isMultiPayment = false;
             this.state.customer_id = "";
 
         } catch (error) {
-
             console.error(error);
-
             alert(
                 error?.data?.message ||
                 error?.message ||
                 "Unable to complete sale."
             );
-
         } finally {
-
             this.state.processing = false;
         }
     }
 
     newSale() {
-
         this.state.completedOrder = null;
         this.state.cart.splice(0);
-
         this.state.discount = 0;
         this.state.amount_paid = 0;
+        this.state.multiPayments = { cash: 0, card: 0, bank: 0 };
+        this.state.isMultiPayment = false;
         this.state.customer_id = "";
         this.state.payment_method = "cash";
         this.state.barcodeInput = "";
@@ -378,7 +404,6 @@ export class RetailPOS extends Component {
     }
 
     printReceipt() {
-
         window.print();
     }
 }

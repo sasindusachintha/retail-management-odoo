@@ -42,29 +42,28 @@
                             </tr>
 
                             <tr>
-                                <td><strong>Customer:</strong></td>
-                                <td colspan="3">
+                                <td><strong>Cashier:</strong></td>
+                                <td>
+                                    <span t-field="order.create_uid.name"/>
+                                </td>
 
+                                <td><strong>Customer:</strong></td>
+                                <td>
                                     <span
                                         t-if="order.customer_id"
                                         t-field="order.customer_id.name"
                                     />
-
                                     <span t-if="not order.customer_id">
                                         Walk-in Customer
                                     </span>
-
                                 </td>
                             </tr>
 
                             <tr t-if="order.customer_id and order.customer_id.phone">
-
                                 <td><strong>Phone:</strong></td>
-
                                 <td colspan="3">
                                     <span t-field="order.customer_id.phone"/>
                                 </td>
-
                             </tr>
 
                         </table>
@@ -82,6 +81,7 @@
                                     <th style="padding:6px;">Product</th>
                                     <th style="padding:6px;">Qty</th>
                                     <th style="padding:6px;">Unit Price</th>
+                                    <th style="padding:6px;">Discount</th>
                                     <th style="padding:6px;">Amount</th>
                                 </tr>
 
@@ -105,6 +105,11 @@
                                     <td style="padding:6px; text-align:right;">
                                         Rs.
                                         <span t-field="line.unit_price"/>
+                                    </td>
+
+                                    <td style="padding:6px; text-align:right;">
+                                        Rs.
+                                        <span t-field="line.discount"/>
                                     </td>
 
                                     <td style="padding:6px; text-align:right;">

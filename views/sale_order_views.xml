@@ -9,14 +9,20 @@
             <list string="Sales History">
                 <field name="name"/>
                 <field name="customer_id"/>
+                <field name="create_uid" string="Cashier"/>
                 <field name="order_date"/>
                 <field name="subtotal"/>
-                <field name="discount"/>
+                <field name="discount" string="Order Discount"/>
                 <field name="amount_total"/>
                 <field name="payment_method"/>
                 <field name="amount_paid"/>
                 <field name="change_amount"/>
-                <field name="state"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-success="state == 'confirmed'"
+                       decoration-danger="state == 'cancelled'"
+                       decoration-info="state == 'draft'"
+                />
             </list>
         </field>
     </record>
@@ -26,36 +32,90 @@
         <field name="name">shop.sale.order.search</field>
         <field name="model">shop.sale.order</field>
         <field name="arch" type="xml">
-            <search>
-                <field name="name"/>
-                <field name="customer_id"/>
-                <field name="order_date"/>
+            <search string="Search Sales History">
+                <field name="name" string="Order Reference"/>
+                <field name="customer_id" string="Customer"/>
+                <field name="create_uid" string="Cashier"/>
+                <field name="order_date" string="Order Date"/>
 
+                <!-- Status Filters -->
                 <filter
                     name="confirmed"
                     string="Completed"
                     domain="[('state', '=', 'confirmed')]"
                 />
-
                 <filter
-                    name="today"
-                    string="Today"
-                    domain="[('order_date', '&gt;=', context_today())]"
+                    name="cancelled"
+                    string="Cancelled"
+                    domain="[('state', '=', 'cancelled')]"
                 />
 
                 <separator/>
 
+                <!-- Date Filters -->
+                <filter
+                    name="today"
+                    string="Today"
+                    domain="[('order_date', '&gt;=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"
+                />
+                <filter
+                    name="this_week"
+                    string="This Week"
+                    domain="[('order_date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d 00:00:00'))]"
+                />
+                <filter
+                    name="this_month"
+                    string="This Month"
+                    domain="[('order_date', '&gt;=', (context_today().replace(day=1)).strftime('%Y-%m-%d 00:00:00'))]"
+                />
+
+                <separator/>
+
+                <!-- Payment Method Filters -->
+                <filter
+                    name="pay_cash"
+                    string="Cash"
+                    domain="[('payment_method', '=', 'cash')]"
+                />
+                <filter
+                    name="pay_card"
+                    string="Card"
+                    domain="[('payment_method', '=', 'card')]"
+                />
+                <filter
+                    name="pay_bank"
+                    string="Bank Transfer"
+                    domain="[('payment_method', '=', 'bank')]"
+                />
+
+                <separator/>
+
+                <!-- Group By -->
                 <group>
                     <filter
                         name="group_customer"
                         string="Customer"
                         context="{'group_by': 'customer_id'}"
                     />
-
+                    <filter
+                        name="group_cashier"
+                        string="Cashier"
+                        context="{'group_by': 'create_uid'}"
+                    />
                     <filter
                         name="group_payment"
                         string="Payment Method"
                         context="{'group_by': 'payment_method'}"
+                    />
+                    <filter
+                        name="group_status"
+                        string="Status"
+                        context="{'group_by': 'state'}"
+                    />
+                    <filter
+                        name="group_date"
+                        string="Order Date"
+                        context="{'group_by': 'order_date:day'}"
                     />
                 </group>
 
@@ -125,6 +185,7 @@
                         <group>
                             <field name="customer_id"/>
                             <field name="order_date"/>
+                            <field name="create_uid" string="Cashier" readonly="1"/>
                         </group>
 
                         <group>
@@ -144,6 +205,7 @@
                                     <field name="product_id"/>
                                     <field name="quantity"/>
                                     <field name="unit_price"/>
+                                    <field name="discount" string="Line Discount"/>
                                     <field name="subtotal" readonly="1"/>
                                 </list>
 
@@ -156,7 +218,7 @@
                     <group class="oe_subtotal_footer oe_right">
 
                         <field name="subtotal" readonly="1"/>
-                        <field name="discount"/>
+                        <field name="discount" string="Order Discount"/>
                         <field name="amount_total" readonly="1"/>
                         <field name="change_amount" readonly="1"/>
 
