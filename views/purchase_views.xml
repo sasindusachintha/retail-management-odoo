@@ -166,22 +166,49 @@
     <!-- Menus -->
 
     <menuitem
+        id="menu_shop_purchasing_dashboard"
+        name="Purchasing Intelligence"
+        parent="menu_shop_purchases"
+        action="action_shop_purchasing_dashboard"
+        sequence="10"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+    <menuitem
+        id="menu_shop_reorder_assistant"
+        name="Reorder Assistant"
+        parent="menu_shop_purchases"
+        action="action_shop_reorder_assistant"
+        sequence="20"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+    <menuitem
+        id="menu_shop_cost_increase_alerts"
+        name="Cost Increase Alerts"
+        parent="menu_shop_purchases"
+        action="action_shop_cost_increase_alerts"
+        sequence="30"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+    />
+
+    <menuitem
         id="menu_shop_purchase_orders"
         name="Purchase Orders"
         parent="menu_shop_purchases"
         action="action_shop_purchase_orders"
-        sequence="2"
-         groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+        sequence="50"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
     />
-
 
     <menuitem
         id="menu_shop_purchase_history"
         name="Purchase History"
         parent="menu_shop_purchases"
         action="action_shop_purchase_history"
-        sequence="3"
-           groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
+        sequence="60"
+        groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
     />
+
 
 </odoo>

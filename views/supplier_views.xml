@@ -30,6 +30,19 @@
                         </h1>
                     </div>
 
+                    <group string="Supplier Performance Intelligence">
+                        <group>
+                            <field name="total_purchase_value" string="Total Purchases"/>
+                            <field name="purchase_order_count" string="Purchase Orders"/>
+                            <field name="received_purchase_count" string="Received Purchases"/>
+                        </group>
+                        <group>
+                            <field name="products_supplied_count" string="Products Supplied"/>
+                            <field name="last_purchase_date" string="Last Purchase Date"/>
+                            <field name="avg_purchase_value" string="Avg Order Value"/>
+                        </group>
+                    </group>
+
                     <group>
 
                         <group>
@@ -44,29 +57,45 @@
 
                     </group>
 
-                    <group string="Notes">
-                        <field name="notes"/>
-                    </group>
+                    <notebook>
 
-                    <!-- Products supplied by this supplier -->
-                    <group string="Products Supplied">
-                        <field name="product_ids"
-                               nolabel="1"
-                               readonly="1">
-                            <list string="Products" create="false">
-                                <field name="name"/>
-                                <field name="sku" string="SKU"/>
-                                <field name="price" string="Selling Price"/>
-                                <field name="cost_price" string="Purchase Cost"/>
-                                <field name="quantity" string="Stock"/>
-                                <field name="stock_status" widget="badge"
-                                       decoration-danger="stock_status == 'out'"
-                                       decoration-warning="stock_status == 'low'"
-                                       decoration-success="stock_status == 'ok'"
-                                />
-                            </list>
-                        </field>
-                    </group>
+                        <page string="Products Supplied">
+                            <field name="product_ids"
+                                   nolabel="1"
+                                   readonly="1">
+                                <list string="Products" create="false">
+                                    <field name="name"/>
+                                    <field name="sku" string="SKU"/>
+                                    <field name="price" string="Selling Price"/>
+                                    <field name="cost_price" string="Purchase Cost"/>
+                                    <field name="quantity" string="Stock"/>
+                                    <field name="stock_status" widget="badge"
+                                           decoration-danger="stock_status == 'out'"
+                                           decoration-warning="stock_status == 'low'"
+                                           decoration-success="stock_status == 'ok'"
+                                    />
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Supplier Product History">
+                            <field name="supplier_product_line_ids" readonly="1">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="product_id"/>
+                                    <field name="last_purchase_date" string="Last Purchase Date"/>
+                                    <field name="last_purchase_cost" string="Last Purchase Cost"/>
+                                    <field name="previous_purchase_cost" string="Previous Purchase Cost"/>
+                                    <field name="total_quantity" string="Total Qty Purchased" sum="Total Qty"/>
+                                    <field name="total_amount" string="Total Amount Spent" sum="Total Spent"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Notes">
+                            <field name="notes"/>
+                        </page>
+
+                    </notebook>
 
                 </sheet>
 
@@ -96,8 +125,9 @@
         name="Suppliers"
         parent="menu_shop_purchases"
         action="action_shop_suppliers"
-        sequence="1"
+        sequence="40"
         groups="shop_management.group_shop_manager,shop_management.group_shop_inventory"
     />
+
 
 </odoo>

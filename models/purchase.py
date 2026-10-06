@@ -215,7 +215,8 @@ class ShopPurchaseOrderLine(models.Model):
     product_id = fields.Many2one(
         'shop.product',
         string='Product',
-        required=True
+        required=True,
+        ondelete='cascade'
     )
 
     quantity = fields.Float(
@@ -236,10 +237,37 @@ class ShopPurchaseOrderLine(models.Model):
         store=True
     )
 
+    supplier_id = fields.Many2one(
+        'shop.supplier',
+        related='purchase_id.supplier_id',
+        string='Supplier',
+        store=True,
+        readonly=True
+    )
+
+    purchase_date = fields.Datetime(
+        related='purchase_id.purchase_date',
+        string='Purchase Date',
+        store=True,
+        readonly=True
+    )
+
+    purchase_state = fields.Selection(
+        related='purchase_id.state',
+        string='Status',
+        store=True,
+        readonly=True
+    )
+
     @api.onchange('product_id')
     def _onchange_product_id(self):
         if self.product_id:
-            self.cost_price = self.product_id.price
+            self.cost_price = (
+                self.product_id.cost_price
+                if self.product_id.cost_price > 0
+                else self.product_id.price
+            )
+
 
     @api.depends('quantity', 'cost_price')
     def _compute_subtotal(self):

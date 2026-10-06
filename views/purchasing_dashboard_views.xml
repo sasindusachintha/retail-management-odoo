@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Purchasing Dashboard Form View -->
+    <record id="view_shop_purchasing_dashboard_form" model="ir.ui.view">
+        <field name="name">shop.purchasing.dashboard.form</field>
+        <field name="model">shop.purchasing.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Purchasing Intelligence Dashboard">
+                <header>
+                    <button name="action_generate"
+                            string="Refresh Intelligence Data"
+                            type="object"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Purchasing Intelligence</h1>
+                    </div>
+
+                    <!-- Key Intelligence Summary Stat Cards -->
+                    <group string="Purchasing Key Metrics">
+                        <group>
+                            <field name="total_month_purchase" string="Total Purchases This Month"/>
+                            <field name="active_suppliers_count" string="Active Suppliers"/>
+                            <field name="products_purchased_count" string="Products Purchased"/>
+                        </group>
+                        <group>
+                            <field name="reorder_suggestions_count" string="Reorder Suggestions"/>
+                            <field name="cost_increase_alerts_count" string="Cost Increase Alerts"/>
+                        </group>
+                    </group>
+
+                    <group string="Purchasing Insights">
+                        <group>
+                            <field name="top_supplier_id" string="Top Supplier"/>
+                            <field name="top_supplier_amount" string="Top Supplier Spend"/>
+                        </group>
+                        <group>
+                            <field name="highest_cost_increase_product_id" string="Highest Price Hike Product"/>
+                            <field name="highest_cost_increase_percent" string="Highest Hike %"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Top Suppliers by Spending">
+                            <field name="top_supplier_line_ids" readonly="1">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="supplier_id"/>
+                                    <field name="order_count" string="Received Orders"/>
+                                    <field name="total_spending" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Top Purchased Products">
+                            <field name="top_product_line_ids" readonly="1">
+                                <list create="0" delete="0" edit="0">
+                                    <field name="product_id"/>
+                                    <field name="total_quantity" sum="Total Quantity"/>
+                                    <field name="total_spending" sum="Total Spent"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Cost Increase Alerts">
+                            <field name="cost_alert_line_ids" readonly="1">
+                                <list create="0" delete="0" edit="0" decoration-danger="increase_percent &gt;= 10.0" decoration-warning="increase_percent &lt; 10.0">
+                                    <field name="product_id"/>
+                                    <field name="supplier_id"/>
+                                    <field name="previous_cost"/>
+                                    <field name="current_cost"/>
+                                    <field name="increase_amount"/>
+                                    <field name="increase_percent"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Purchasing Intelligence Window Action -->
+    <record id="action_shop_purchasing_dashboard" model="ir.actions.act_window">
+        <field name="name">Purchasing Intelligence</field>
+        <field name="res_model">shop.purchasing.dashboard</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

@@ -11,3 +11,7 @@ from . import report_payment_method
 from . import report_purchase
 from . import report_profit
 from . import report_stock
+from . import supplier_product
+from . import product_supplier_comparison
+from . import reorder_assistant
+from . import purchasing_dashboard

@@ -36,6 +36,8 @@
 
     'views/menu_root.xml',
     'views/product_views.xml',
+    'views/reorder_assistant_views.xml',
+    'views/purchasing_dashboard_views.xml',
     'views/customer_views.xml',
     'views/sale_receipt.xml',
     'views/sale_order_views.xml',
