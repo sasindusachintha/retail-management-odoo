@@ -12,7 +12,7 @@ The system is designed around a practical retail workflow, from purchasing stock
 
 A centralized dashboard providing an overview of the shop's current activity.
 
-* Today's sales
+* Today's sales.
 * Today's orders
 * Product count
 * Customer count
