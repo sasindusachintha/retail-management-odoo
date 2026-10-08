@@ -14,7 +14,7 @@ A centralized dashboard providing an overview of the shop's current activity.
 
 * Today's sales.
 * Today's orders.
-* Product count
+* Product count.
 * Customer count
 * Low-stock products
 * Recent sales
