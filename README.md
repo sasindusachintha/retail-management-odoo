@@ -26,7 +26,7 @@ A centralized dashboard providing an overview of the shop's current activity.
 
 A custom retail POS interface designed for fast checkout.
 
-* Product search
+* Product search.
 * Product selection
 * Customer selection
 * Cart management
