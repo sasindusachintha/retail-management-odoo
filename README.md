@@ -32,7 +32,7 @@ A custom retail POS interface designed for fast checkout.
 * Cart management.
 * Quantity adjustment.
 * Discounts.
-* Multiple payment methods
+* Multiple payment methods.
 * Sale confirmation
 * Automatic stock deduction
 * Automatic payment recording
