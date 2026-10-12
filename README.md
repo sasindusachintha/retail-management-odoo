@@ -35,7 +35,7 @@ A custom retail POS interface designed for fast checkout.
 * Multiple payment methods.
 * Sale confirmation.
 * Automatic stock deduction.
-* Automatic payment recording
+* Automatic payment recording.
 * Sales history
 * Receipt printing
 
